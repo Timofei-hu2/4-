@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>School Ready Admin Edition</title>
+    <title>School Ready Fixed</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
@@ -14,7 +14,7 @@
         .show { display: block; }
         .post { background: var(--white); margin-bottom: 10px; padding: 15px; border-radius: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .chat-box { display: flex; flex-direction: column; height: calc(100vh - 180px); overflow-y: auto; padding: 10px; }
-        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; margin-bottom: 8px; font-size: 15px; line-height: 1.4; }
+        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; margin-bottom: 8px; font-size: 15px; }
         .msg.me { align-self: flex-end; background: var(--main); color: white; border-bottom-right-radius: 4px; }
         .msg.other { align-self: flex-start; background: var(--white); color: var(--text); border-bottom-left-radius: 4px; border: 1px solid rgba(0,0,0,0.05); }
         .nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: var(--white); display: flex; border-top: 1px solid rgba(0,0,0,0.1); z-index: 1000; }
@@ -24,76 +24,79 @@
         #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; }
         .modal-content { background:var(--white); width:90%; padding:20px; border-radius:20px; }
         textarea { width:100%; height:100px; border:1px solid var(--gray); border-radius:12px; padding:10px; box-sizing:border-box; background: var(--bg); color: var(--text); }
-        .sched-card { background: var(--white); padding: 15px; border-radius: 15px; margin-bottom: 10px; }
     </style>
 </head>
 <body id="body">
 
-<div id="auth" style="text-align: center; padding-top: 100px;">
+<div id="authPage" style="text-align: center; padding-top: 100px;">
     <h1 style="color:var(--main)">School Ready</h1>
     <div style="padding: 20px;">
-        <input id="uN" placeholder="Логин" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:10px;">
-        <input id="uP" type="password" placeholder="Пароль" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:20px;">
-        <button onclick="login()" style="width:100%; padding:15px; background:var(--main); color:white; border:none; border-radius:12px; font-weight:bold;">ВОЙТИ</button>
+        <input id="loginInput" placeholder="Логин" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box;">
+        <input id="passInput" type="password" placeholder="Пароль" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:20px; box-sizing:border-box;">
+        <button onclick="handleLogin()" style="width:100%; padding:15px; background:var(--main); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">ВОЙТИ</button>
     </div>
 </div>
 
-<div id="app" style="display:none;">
+<div id="mainApp" style="display:none;">
     <div id="news" class="page show">
-        <div id="adm-n" style="display:none;"><button class="fab" onclick="ask('news')">✍️ Создать новость</button></div>
+        <div id="adm-n" style="display:none;"><button class="fab" onclick="openAsk('news')">✍️ Создать новость</button></div>
         <div id="list-news"></div>
     </div>
 
     <div id="hw" class="page">
-        <div id="adm-h" style="display:none;"><button class="fab" onclick="ask('hw')">📚 Записать ДЗ</button></div>
+        <div id="adm-h" style="display:none;"><button class="fab" onclick="openAsk('hw')">📚 Записать ДЗ</button></div>
         <div id="list-hw"></div>
     </div>
 
     <div id="timetable" class="page">
-        <div id="adm-t" style="display:none;"><button class="fab" onclick="ask('timetable')">📅 Изменить расписание/звонки</button></div>
-        <div id="list-timetable">
-            <div class="sched-card"><h3>🔔 Звонки</h3><div id="times-data">Загрузка...</div></div>
-            <div class="sched-card"><h3>📖 Уроки</h3><div id="lessons-data">Загрузка...</div></div>
+        <div id="adm-t" style="display:none;"><button class="fab" onclick="openAsk('timetable')">📅 Изменить расписание</button></div>
+        <div id="list-timetable" style="background:var(--white); padding:15px; border-radius:15px;">
+            <h3>📖 Расписание и звонки</h3>
+            <div id="timetableDisplay" style="white-space:pre-wrap;">Загрузка...</div>
         </div>
     </div>
 
     <div id="chat" class="page">
         <div id="chatBox" class="chat-box"></div>
         <div style="padding:10px; background:var(--white); position:fixed; bottom:65px; width:100%; display:flex; gap:8px; box-sizing:border-box;">
-            <input id="mIn" placeholder="Сообщение..." style="flex:1; padding:12px; border-radius:20px; border:1px solid var(--gray); background:var(--bg); color:var(--text);">
-            <button onclick="sendMsg()" style="background:var(--main); color:white; border:none; border-radius:50%; width:44px; height:44px; font-size:20px;">🚀</button>
+            <input id="msgInput" placeholder="Сообщение..." style="flex:1; padding:12px; border-radius:20px; border:1px solid var(--gray); background:var(--bg); color:var(--text);">
+            <button onclick="sendMessage()" style="background:var(--main); color:white; border:none; border-radius:50%; width:44px; height:44px;">🚀</button>
         </div>
     </div>
 
     <div id="prof" class="page" style="text-align:center;">
-        <div style="width:80px; height:80px; border-radius:50%; background:#eee; margin:20px auto; overflow:hidden; border:2px solid var(--main);"><img id="myPic" src="" style="width:100%; height:100%; object-fit:cover;"></div>
-        <h2 id="myName">Имя</h2>
-        <button class="fab" style="background:var(--gray)" onclick="ask('ava')">Сменить фото</button>
-        <button class="fab" style="background:#5856d6" onclick="toggleTheme()">🌙 Темная тема</button>
+        <div style="width:80px; height:80px; border-radius:50%; background:#eee; margin:20px auto; overflow:hidden; border:2px solid var(--main);"><img id="userAvatar" src="" style="width:100%; height:100%; object-fit:cover;"></div>
+        <h2 id="displayUserName">Имя</h2>
+        <button class="fab" style="background:var(--gray)" onclick="openAsk('ava')">Сменить фото</button>
+        <button class="fab" style="background:#5856d6" onclick="document.body.classList.toggle('dark')">🌙 Темная тема</button>
         <button class="fab" style="background:#ff3b30" onclick="location.reload()">ВЫЙТИ</button>
     </div>
 
     <nav class="nav">
-        <button class="nav-item active" onclick="go('news', this)"><span>📢</span>Лента</button>
-        <button class="nav-item" onclick="go('hw', this)"><span>📚</span>ДЗ</button>
-        <button class="nav-item" onclick="go('timetable', this)"><span>📅</span>Уроки</button>
-        <button class="nav-item" onclick="go('chat', this)"><span>💬</span>Чат</button>
-        <button class="nav-item" onclick="go('prof', this)"><span>👤</span>Я</button>
+        <button class="nav-item active" onclick="switchPage('news', this)"><span>📢</span>Лента</button>
+        <button class="nav-item" onclick="switchPage('hw', this)"><span>📚</span>ДЗ</button>
+        <button class="nav-item" onclick="switchPage('timetable', this)"><span>📅</span>Уроки</button>
+        <button class="nav-item" onclick="switchPage('chat', this)"><span>💬</span>Чат</button>
+        <button class="nav-item" onclick="switchPage('prof', this)"><span>👤</span>Я</button>
     </nav>
 </div>
 
 <div id="modal"><div class="modal-content">
-    <h3 id="modalTitle" style="margin:0; color:var(--text)"></h3>
-    <textarea id="modalInput" style="margin-top:10px;"></textarea>
+    <h3 id="modalTitle" style="margin:0;"></h3>
+    <textarea id="modalValue" style="margin-top:10px;"></textarea>
     <div style="display:flex; gap:10px; margin-top:15px;">
-        <button onclick="closeModal()" style="flex:1; padding:12px; border:none; background:#eee; border-radius:12px; color:black;">Отмена</button>
-        <button id="modalBtn" style="flex:1; padding:12px; border:none; background:var(--main); color:white; border-radius:12px;">ОК</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="flex:1; padding:12px; border:none; background:#eee; border-radius:12px;">Отмена</button>
+        <button id="modalSaveBtn" style="flex:1; padding:12px; border:none; background:var(--main); color:white; border-radius:12px;">ОК</button>
     </div>
 </div></div>
 
 <script>
-    // Твой список пользователей (сократил для краткости, добавь своих)
-    const users = [{login:"Ерасыл", password:"аминсайта", role:"admin"}, {login:"Умида", password:"Умида1", role:"student"}];
+    const userList = [
+        {login:"Ерасыл", password:"аминсайта", role:"admin"},
+        {login:"Умида", password:"Умида1", role:"student"},
+        {login:"Алина", password:"202564", role:"student"},
+        {login:"Мирас", password:"мирас111", role:"student"}
+    ];
 
     firebase.initializeApp({
         apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc",
@@ -104,92 +107,89 @@
         appId: "1:538837431491:web:9cb1d4706b4d7e97679e76"
     });
     const db = firebase.firestore();
-    let me = null, mode = "";
+    let currentUser = null;
+    let currentMode = "";
 
-    function login() {
-        const u = uN.value.trim(), p = uP.value.trim();
-        const f = users.find(x => x.login === u && x.password === p);
-        if(f) { me = f; init(); } else alert("Ошибка входа!");
+    function handleLogin() {
+        const u = document.getElementById('loginInput').value.trim();
+        const p = document.getElementById('passInput').value.trim();
+        const found = userList.find(x => x.login === u && x.password === p);
+        
+        if(found) {
+            currentUser = found;
+            document.getElementById('authPage').style.display = "none";
+            document.getElementById('mainApp').style.display = "block";
+            document.getElementById('displayUserName').innerText = currentUser.login;
+            if(currentUser.role === 'admin') {
+                document.querySelectorAll('[id^="adm-"]').forEach(x => x.style.display = "block");
+            }
+            startSync();
+        } else {
+            alert("Неверный логин или пароль!");
+        }
     }
 
-    function init() {
-        document.getElementById('auth').style.display="none";
-        document.getElementById('app').style.display="block";
-        myName.innerText = me.login;
-        if(me.role === 'admin') document.querySelectorAll('[id^="adm-"]').forEach(x=>x.style.display="block");
-        sync();
-    }
-
-    function go(id, el) {
+    function switchPage(id, el) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         document.getElementById(id).classList.add('show');
         el.classList.add('active');
     }
 
-    function toggleTheme() { document.body.classList.toggle('dark'); }
-
-    function ask(type) {
-        mode = type;
-        const titles = {news:"Текст новости", hw:"Что задали?", ava:"Ссылка на фото", timetable:"Расписание (текстом)"};
-        modalTitle.innerText = titles[type];
-        modalInput.value = "";
-        modal.style.display = "flex";
-        modalBtn.onclick = save;
+    function openAsk(mode) {
+        currentMode = mode;
+        const titles = {news:"Текст новости", hw:"Текст ДЗ", ava:"Ссылка на фото", timetable:"Расписание"};
+        document.getElementById('modalTitle').innerText = titles[mode];
+        document.getElementById('modalValue').value = "";
+        document.getElementById('modal').style.display = "flex";
+        document.getElementById('modalSaveBtn').onclick = saveData;
     }
 
-    function closeModal() { modal.style.display = "none"; }
-
-    function save() {
-        const v = modalInput.value.trim();
-        if(!v) return;
-        if(mode==='news'||mode==='hw') db.collection(mode).add({m:v, u:me.login, t:Date.now()});
-        if(mode==='ava') db.collection("users").doc(me.login).set({avatar:v}, {merge:true});
-        if(mode==='timetable') db.collection("info").doc("main").set({data:v}, {merge:true});
-        closeModal();
+    function saveData() {
+        const val = document.getElementById('modalValue').value.trim();
+        if(!val) return;
+        if(currentMode === 'news' || currentMode === 'hw') db.collection(currentMode).add({m:val, u:currentUser.login, t:Date.now()});
+        if(currentMode === 'ava') db.collection("users").doc(currentUser.login).set({avatar:val}, {merge:true});
+        if(currentMode === 'timetable') db.collection("info").doc("main").set({data:val}, {merge:true});
+        document.getElementById('modal').style.display = 'none';
     }
 
-    function sendMsg() {
-        const val = mIn.value.trim();
-        if(val) db.collection("chat").add({ m: val, u: me.login, t: Date.now() });
-        mIn.value = "";
+    function sendMessage() {
+        const m = document.getElementById('msgInput').value.trim();
+        if(m) db.collection("chat").add({ m: m, u: currentUser.login, t: Date.now() });
+        document.getElementById('msgInput').value = "";
     }
 
-    function sync() {
-        // Синхронизация чата
+    function startSync() {
         db.collection("chat").orderBy("t","asc").onSnapshot(s => {
-            chatBox.innerHTML = "";
+            const box = document.getElementById('chatBox');
+            box.innerHTML = "";
             s.forEach(doc => {
                 const d = doc.data();
-                const isMe = d.u === me.login;
-                chatBox.innerHTML += `<div class="msg ${isMe?'me':'other'}">${!isMe?'<b>'+d.u+'</b><br>':''}${d.m}</div>`;
+                const isMe = d.u === currentUser.login;
+                box.innerHTML += `<div class="msg ${isMe?'me':'other'}"><b>${d.u}</b><br>${d.m}</div>`;
             });
-            chatBox.scrollTop = chatBox.scrollHeight;
+            box.scrollTop = box.scrollHeight;
         });
 
-        // Синхронизация расписания
-        db.collection("info").doc("main").onSnapshot(doc => {
-            if(doc.exists) {
-                lessons-data.innerText = doc.data().data || "Пока не заполнено";
-                times-data.innerText = "Редактируется админом через кнопку выше";
-            }
-        });
-
-        // Лента и ДЗ
         ['news', 'hw'].forEach(col => {
             db.collection(col).orderBy("t","desc").onSnapshot(s => {
-                const container = document.getElementById('list-'+col);
-                container.innerHTML = "";
+                const list = document.getElementById('list-'+col);
+                list.innerHTML = "";
                 s.forEach(doc => {
-                    container.innerHTML += `<div class="post"><b>${doc.data().u}</b><br><div style="white-space:pre-wrap">${doc.data().m}</div></div>`;
+                    list.innerHTML += `<div class="post"><b>${doc.data().u}</b><br><div style="white-space:pre-wrap">${doc.data().m}</div></div>`;
                 });
             });
         });
-        
-        db.collection("users").doc(me.login).onSnapshot(doc => { if(doc.exists) myPic.src = doc.data().avatar || ""; });
+
+        db.collection("info").doc("main").onSnapshot(doc => {
+            if(doc.exists) document.getElementById('timetableDisplay').innerText = doc.data().data;
+        });
+
+        db.collection("users").doc(currentUser.login).onSnapshot(doc => {
+            if(doc.exists) document.getElementById('userAvatar').src = doc.data().avatar || "";
+        });
     }
 </script>
 </body>
 </html>
-
-                                                                                         
