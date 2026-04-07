@@ -3,73 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>School Ready Fixed</title>
+    <title>School Ready Ultra 3.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
         :root { --main: #007aff; --bg: #f2f2f7; --white: #ffffff; --gray: #8e8e93; --text: #000000; }
         body.dark { --bg: #1c1c1e; --white: #2c2c2e; --text: #ffffff; --gray: #aeaeb2; }
-        body { margin:0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; }
-        .page { display: none; padding: 10px; }
+        body { margin:0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; transition: 0.3s; }
+        
+        .page { display: none; padding: 10px; animation: fadeIn 0.3s; }
         .show { display: block; }
-        .post { background: var(--white); margin-bottom: 10px; padding: 15px; border-radius: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .post { background: var(--white); margin-bottom: 12px; padding: 15px; border-radius: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .chat-box { display: flex; flex-direction: column; height: calc(100vh - 180px); overflow-y: auto; padding: 10px; }
-        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; margin-bottom: 8px; font-size: 15px; }
+        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; margin-bottom: 8px; font-size: 15px; position: relative; }
         .msg.me { align-self: flex-end; background: var(--main); color: white; border-bottom-right-radius: 4px; }
         .msg.other { align-self: flex-start; background: var(--white); color: var(--text); border-bottom-left-radius: 4px; border: 1px solid rgba(0,0,0,0.05); }
+        
         .nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: var(--white); display: flex; border-top: 1px solid rgba(0,0,0,0.1); z-index: 1000; }
-        .nav-item { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--gray); }
+        .nav-item { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--gray); cursor: pointer; }
         .nav-item.active { color: var(--main); }
-        .fab { background: var(--main); color: white; padding: 12px; border-radius: 12px; width: 100%; border: none; font-weight: bold; margin-bottom: 15px; }
-        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; }
-        .modal-content { background:var(--white); width:90%; padding:20px; border-radius:20px; }
-        textarea { width:100%; height:100px; border:1px solid var(--gray); border-radius:12px; padding:10px; box-sizing:border-box; background: var(--bg); color: var(--text); }
+        
+        .fab { background: var(--main); color: white; padding: 14px; border-radius: 12px; width: 100%; border: none; font-weight: bold; margin-bottom: 15px; font-size: 16px; }
+        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center; }
+        .modal-content { background:var(--white); width:90%; padding:20px; border-radius:20px; box-sizing: border-box; }
+        textarea { width:100%; height:120px; border:1px solid var(--gray); border-radius:12px; padding:12px; box-sizing:border-box; background: var(--bg); color: var(--text); font-size: 16px; }
+        
+        input { width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box; font-size: 16px; background: white; }
     </style>
 </head>
 <body id="body">
 
-<div id="authPage" style="text-align: center; padding-top: 100px;">
-    <h1 style="color:var(--main)">School Ready</h1>
+<div id="authPage" style="text-align: center; padding-top: 80px;">
+    <h1 style="color:var(--main); font-size: 40px; margin-bottom: 10px;">School Ready</h1>
+    <p style="color:var(--gray); margin-bottom: 30px;">Вход в систему</p>
     <div style="padding: 20px;">
-        <input id="loginInput" placeholder="Логин" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box;">
-        <input id="passInput" type="password" placeholder="Пароль" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:20px; box-sizing:border-box;">
-        <button onclick="handleLogin()" style="width:100%; padding:15px; background:var(--main); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">ВОЙТИ</button>
+        <input id="loginInput" type="text" placeholder="Логин">
+        <input id="passInput" type="password" placeholder="Пароль">
+        <button onclick="handleLogin()" style="width:100%; padding:16px; background:var(--main); color:white; border:none; border-radius:12px; font-weight:bold; font-size: 16px;">ВОЙТИ</button>
     </div>
 </div>
 
 <div id="mainApp" style="display:none;">
+    
     <div id="news" class="page show">
-        <div id="adm-n" style="display:none;"><button class="fab" onclick="openAsk('news')">✍️ Создать новость</button></div>
+        <div id="adm-n" style="display:none;"><button class="fab" onclick="openAsk('news')">✍️ Опубликовать новость</button></div>
         <div id="list-news"></div>
     </div>
 
     <div id="hw" class="page">
-        <div id="adm-h" style="display:none;"><button class="fab" onclick="openAsk('hw')">📚 Записать ДЗ</button></div>
+        <div id="adm-h" style="display:none;"><button class="fab" onclick="openAsk('hw')">📚 Записать домашку</button></div>
         <div id="list-hw"></div>
     </div>
 
     <div id="timetable" class="page">
-        <div id="adm-t" style="display:none;"><button class="fab" onclick="openAsk('timetable')">📅 Изменить расписание</button></div>
-        <div id="list-timetable" style="background:var(--white); padding:15px; border-radius:15px;">
-            <h3>📖 Расписание и звонки</h3>
-            <div id="timetableDisplay" style="white-space:pre-wrap;">Загрузка...</div>
+        <div id="adm-t" style="display:none;"><button class="fab" onclick="openAsk('timetable')">📅 Редактировать уроки</button></div>
+        <div class="post">
+            <h3 style="margin-top:0">📅 Уроки и звонки</h3>
+            <div id="timetableDisplay" style="white-space:pre-wrap; line-height:1.6;">Загрузка...</div>
         </div>
     </div>
 
     <div id="chat" class="page">
         <div id="chatBox" class="chat-box"></div>
-        <div style="padding:10px; background:var(--white); position:fixed; bottom:65px; width:100%; display:flex; gap:8px; box-sizing:border-box;">
-            <input id="msgInput" placeholder="Сообщение..." style="flex:1; padding:12px; border-radius:20px; border:1px solid var(--gray); background:var(--bg); color:var(--text);">
-            <button onclick="sendMessage()" style="background:var(--main); color:white; border:none; border-radius:50%; width:44px; height:44px;">🚀</button>
+        <div style="padding:10px; background:var(--white); position:fixed; bottom:65px; width:100%; display:flex; gap:8px; box-sizing:border-box; border-top: 1px solid rgba(0,0,0,0.05);">
+            <input id="msgInput" placeholder="Сообщение..." style="flex:1; margin-bottom:0; padding:12px; border-radius:25px; border:1px solid var(--gray); background: var(--bg); color: var(--text);">
+            <button onclick="sendMessage()" style="background:var(--main); color:white; border:none; border-radius:50%; width:46px; height:46px; font-size:20px;">🚀</button>
         </div>
     </div>
 
-    <div id="prof" class="page" style="text-align:center;">
-        <div style="width:80px; height:80px; border-radius:50%; background:#eee; margin:20px auto; overflow:hidden; border:2px solid var(--main);"><img id="userAvatar" src="" style="width:100%; height:100%; object-fit:cover;"></div>
-        <h2 id="displayUserName">Имя</h2>
-        <button class="fab" style="background:var(--gray)" onclick="openAsk('ava')">Сменить фото</button>
-        <button class="fab" style="background:#5856d6" onclick="document.body.classList.toggle('dark')">🌙 Темная тема</button>
-        <button class="fab" style="background:#ff3b30" onclick="location.reload()">ВЫЙТИ</button>
+    <div id="prof" class="page" style="text-align:center; padding-top:20px;">
+        <div style="width:100px; height:100px; border-radius:50%; background:#eee; margin:0 auto 15px; overflow:hidden; border:3px solid var(--main);">
+            <img id="userAvatar" src="" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <h2 id="displayUserName" style="margin-bottom:20px;">Имя</h2>
+        <button class="fab" style="background:var(--gray)" onclick="openAsk('ava')">🖼️ Сменить аватарку (URL)</button>
+        <button class="fab" style="background:#5856d6" onclick="document.body.classList.toggle('dark')">🌙 Тёмная тема</button>
+        <button class="fab" style="background:#ff3b30; margin-top:30px;" onclick="handleLogout()">🚪 ВЫЙТИ</button>
     </div>
 
     <nav class="nav">
@@ -82,15 +93,16 @@
 </div>
 
 <div id="modal"><div class="modal-content">
-    <h3 id="modalTitle" style="margin:0;"></h3>
-    <textarea id="modalValue" style="margin-top:10px;"></textarea>
+    <h3 id="modalTitle" style="margin:0; margin-bottom:15px;"></h3>
+    <textarea id="modalValue" placeholder="Введите текст..."></textarea>
     <div style="display:flex; gap:10px; margin-top:15px;">
-        <button onclick="document.getElementById('modal').style.display='none'" style="flex:1; padding:12px; border:none; background:#eee; border-radius:12px;">Отмена</button>
-        <button id="modalSaveBtn" style="flex:1; padding:12px; border:none; background:var(--main); color:white; border-radius:12px;">ОК</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="flex:1; padding:14px; border:none; background:#eee; border-radius:12px; font-weight:bold;">Отмена</button>
+        <button id="modalSaveBtn" style="flex:1; padding:14px; border:none; background:var(--main); color:white; border-radius:12px; font-weight:bold;">СОХРАНИТЬ</button>
     </div>
 </div></div>
 
 <script>
+    // БАЗА ПОЛЬЗОВАТЕЛЕЙ
     const userList = [
         {login:"Ерасыл", password:"аминсайта", role:"admin"},
         {login:"Умида", password:"Умида1", role:"student"},
@@ -98,6 +110,7 @@
         {login:"Мирас", password:"мирас111", role:"student"}
     ];
 
+    // НАСТРОЙКИ FIREBASE
     firebase.initializeApp({
         apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc",
         authDomain: "e-my-fam.firebaseapp.com",
@@ -110,6 +123,19 @@
     let currentUser = null;
     let currentMode = "";
 
+    // ПРОВЕРКА СОХРАНЕННОГО ВХОДА ПРИ ЗАГРУЗКЕ
+    window.onload = () => {
+        const saved = localStorage.getItem('schoolUser');
+        if (saved) {
+            const data = JSON.parse(saved);
+            const found = userList.find(x => x.login === data.login && x.password === data.password);
+            if (found) {
+                currentUser = found;
+                showAppUI();
+            }
+        }
+    };
+
     function handleLogin() {
         const u = document.getElementById('loginInput').value.trim();
         const p = document.getElementById('passInput').value.trim();
@@ -117,16 +143,26 @@
         
         if(found) {
             currentUser = found;
-            document.getElementById('authPage').style.display = "none";
-            document.getElementById('mainApp').style.display = "block";
-            document.getElementById('displayUserName').innerText = currentUser.login;
-            if(currentUser.role === 'admin') {
-                document.querySelectorAll('[id^="adm-"]').forEach(x => x.style.display = "block");
-            }
-            startSync();
+            localStorage.setItem('schoolUser', JSON.stringify(found));
+            showAppUI();
         } else {
             alert("Неверный логин или пароль!");
         }
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('schoolUser');
+        location.reload();
+    }
+
+    function showAppUI() {
+        document.getElementById('authPage').style.display = "none";
+        document.getElementById('mainApp').style.display = "block";
+        document.getElementById('displayUserName').innerText = currentUser.login;
+        if(currentUser.role === 'admin') {
+            document.querySelectorAll('[id^="adm-"]').forEach(x => x.style.display = "block");
+        }
+        startDataSync();
     }
 
     function switchPage(id, el) {
@@ -138,7 +174,7 @@
 
     function openAsk(mode) {
         currentMode = mode;
-        const titles = {news:"Текст новости", hw:"Текст ДЗ", ava:"Ссылка на фото", timetable:"Расписание"};
+        const titles = {news:"Что нового?", hw:"Домашнее задание", ava:"Вставьте ссылку на фото", timetable:"Редактирование расписания"};
         document.getElementById('modalTitle').innerText = titles[mode];
         document.getElementById('modalValue').value = "";
         document.getElementById('modal').style.display = "flex";
@@ -155,12 +191,14 @@
     }
 
     function sendMessage() {
-        const m = document.getElementById('msgInput').value.trim();
+        const input = document.getElementById('msgInput');
+        const m = input.value.trim();
         if(m) db.collection("chat").add({ m: m, u: currentUser.login, t: Date.now() });
-        document.getElementById('msgInput').value = "";
+        input.value = "";
     }
 
-    function startSync() {
+    function startDataSync() {
+        // Чат
         db.collection("chat").orderBy("t","asc").onSnapshot(s => {
             const box = document.getElementById('chatBox');
             box.innerHTML = "";
@@ -172,24 +210,29 @@
             box.scrollTop = box.scrollHeight;
         });
 
+        // Новости и ДЗ
         ['news', 'hw'].forEach(col => {
             db.collection(col).orderBy("t","desc").onSnapshot(s => {
                 const list = document.getElementById('list-'+col);
                 list.innerHTML = "";
                 s.forEach(doc => {
-                    list.innerHTML += `<div class="post"><b>${doc.data().u}</b><br><div style="white-space:pre-wrap">${doc.data().m}</div></div>`;
+                    list.innerHTML += `<div class="post"><b>${doc.data().u}</b><br><div style="white-space:pre-wrap; margin-top:5px;">${doc.data().m}</div></div>`;
                 });
             });
         });
 
+        // Расписание
         db.collection("info").doc("main").onSnapshot(doc => {
             if(doc.exists) document.getElementById('timetableDisplay').innerText = doc.data().data;
+            else document.getElementById('timetableDisplay').innerText = "Расписание пока не заполнено.";
         });
 
+        // Аватарка
         db.collection("users").doc(currentUser.login).onSnapshot(doc => {
-            if(doc.exists) document.getElementById('userAvatar').src = doc.data().avatar || "";
+            if(doc.exists) document.getElementById('userAvatar').src = doc.data().avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
         });
     }
 </script>
 </body>
 </html>
+
