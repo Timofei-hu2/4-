@@ -3,106 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>School Ready Ultra</title>
+    <title>School Ready Admin Edition</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
         :root { --main: #007aff; --bg: #f2f2f7; --white: #ffffff; --gray: #8e8e93; --text: #000000; }
         body.dark { --bg: #1c1c1e; --white: #2c2c2e; --text: #ffffff; --gray: #aeaeb2; }
-        
-        body { margin:0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; transition: 0.3s; }
-        .stories-bar { display: flex; gap: 12px; padding: 15px; overflow-x: auto; background: var(--white); border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .ring { width: 60px; height: 60px; border-radius: 50%; padding: 3px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); margin-bottom: 5px; }
-        .ring.add { background: var(--main); position: relative; }
-        .ring.add::after { content: '+'; color: white; font-size: 30px; display: flex; align-items: center; justify-content: center; height: 100%; }
-        .ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--white); }
-        
-        .post { background: var(--white); margin: 10px; padding: 15px; border-radius: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .post-text { white-space: pre-wrap; font-size: 16px; margin-bottom: 10px; }
-        
-        .chat-box { padding: 10px; display: flex; flex-direction: column; height: calc(100vh - 160px); overflow-y: auto; }
-        .msg { max-width: 80%; padding: 10px 15px; border-radius: 20px; margin-bottom: 8px; font-size: 15px; position: relative; }
+        body { margin:0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        .page { display: none; padding: 10px; }
+        .show { display: block; }
+        .post { background: var(--white); margin-bottom: 10px; padding: 15px; border-radius: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .chat-box { display: flex; flex-direction: column; height: calc(100vh - 180px); overflow-y: auto; padding: 10px; }
+        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; margin-bottom: 8px; font-size: 15px; line-height: 1.4; }
         .msg.me { align-self: flex-end; background: var(--main); color: white; border-bottom-right-radius: 4px; }
-        .msg.other { align-self: flex-start; background: var(--white); color: var(--text); border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .status-tag { font-size: 9px; opacity: 0.6; margin-left: 5px; font-style: italic; }
-
-        .nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: var(--white); display: flex; border-top: 1px solid rgba(0,0,0,0.1); z-index: 900; opacity: 0.95; }
+        .msg.other { align-self: flex-start; background: var(--white); color: var(--text); border-bottom-left-radius: 4px; border: 1px solid rgba(0,0,0,0.05); }
+        .nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: var(--white); display: flex; border-top: 1px solid rgba(0,0,0,0.1); z-index: 1000; }
         .nav-item { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--gray); }
         .nav-item.active { color: var(--main); }
-        
-        .fab { background: var(--main); color: white; padding: 12px; border-radius: 12px; width: calc(100% - 20px); margin: 10px; border: none; font-weight: bold; }
-        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center; }
-        .modal-content { background:var(--white); width:90%; padding:20px; border-radius:20px; color: var(--text); }
-        #modalInput { width:100%; height:100px; border:1px solid var(--gray); border-radius:12px; padding:10px; background: var(--bg); color: var(--text); margin-top: 10px; }
-        
-        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: var(--white); border-radius: 12px; overflow: hidden; }
-        .schedule-table td { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .day-title { background: var(--main); color: white; padding: 8px 15px; font-weight: bold; margin-top: 15px; border-radius: 8px; }
+        .fab { background: var(--main); color: white; padding: 12px; border-radius: 12px; width: 100%; border: none; font-weight: bold; margin-bottom: 15px; }
+        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; }
+        .modal-content { background:var(--white); width:90%; padding:20px; border-radius:20px; }
+        textarea { width:100%; height:100px; border:1px solid var(--gray); border-radius:12px; padding:10px; box-sizing:border-box; background: var(--bg); color: var(--text); }
+        .sched-card { background: var(--white); padding: 15px; border-radius: 15px; margin-bottom: 10px; }
     </style>
 </head>
 <body id="body">
 
-<div id="auth" style="text-align: center; padding-top: 60px;">
-    <h1 style="color:var(--main); font-size: 42px; margin-bottom: 0;">School Ready</h1>
-    <p style="color:var(--gray)">Ultra Edition v3.0</p>
+<div id="auth" style="text-align: center; padding-top: 100px;">
+    <h1 style="color:var(--main)">School Ready</h1>
     <div style="padding: 20px;">
-        <input id="uN" type="text" placeholder="Логин" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box;">
-        <input id="uP" type="password" placeholder="Пароль" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:20px; box-sizing:border-box;">
+        <input id="uN" placeholder="Логин" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:10px;">
+        <input id="uP" type="password" placeholder="Пароль" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:20px;">
         <button onclick="login()" style="width:100%; padding:15px; background:var(--main); color:white; border:none; border-radius:12px; font-weight:bold;">ВОЙТИ</button>
     </div>
 </div>
 
 <div id="app" style="display:none;">
-    <div class="stories-bar" id="storyList">
-        <div class="story-item" onclick="ask('story')" style="min-width:65px; text-align:center;">
-            <div class="ring add"></div><div style="font-size:11px">Моя</div>
-        </div>
-    </div>
-
     <div id="news" class="page show">
-        <div id="adm-n" style="display:none;"><button class="fab" onclick="ask('news')">✍️ Написать новость</button></div>
+        <div id="adm-n" style="display:none;"><button class="fab" onclick="ask('news')">✍️ Создать новость</button></div>
         <div id="list-news"></div>
     </div>
 
     <div id="hw" class="page">
-        <div id="adm-h" style="display:none;"><button class="fab" onclick="ask('hw')">📚 Добавить ДЗ</button></div>
+        <div id="adm-h" style="display:none;"><button class="fab" onclick="ask('hw')">📚 Записать ДЗ</button></div>
         <div id="list-hw"></div>
     </div>
 
-    <div id="timetable" class="page" style="padding: 15px;">
-        <h2>📅 Расписание</h2>
-        <div class="day-title">Понедельник</div>
-        <table class="schedule-table">
-            <tr><td>1. Алгебра</td><td>08:30</td></tr>
-            <tr><td>2. Русский язык</td><td>09:20</td></tr>
-            <tr><td>3. История</td><td>10:15</td></tr>
-        </table>
-        <div class="day-title">Вторник</div>
-        <table class="schedule-table">
-            <tr><td>1. Геометрия</td><td>08:30</td></tr>
-            <tr><td>2. Физ-ра</td><td>09:20</td></tr>
-            <tr><td>3. Английский</td><td>10:15</td></tr>
-        </table>
-        <p style="text-align:center; color:var(--gray); font-size:12px; margin-top:20px;">Остальное расписание добавит админ...</p>
+    <div id="timetable" class="page">
+        <div id="adm-t" style="display:none;"><button class="fab" onclick="ask('timetable')">📅 Изменить расписание/звонки</button></div>
+        <div id="list-timetable">
+            <div class="sched-card"><h3>🔔 Звонки</h3><div id="times-data">Загрузка...</div></div>
+            <div class="sched-card"><h3>📖 Уроки</h3><div id="lessons-data">Загрузка...</div></div>
+        </div>
     </div>
 
     <div id="chat" class="page">
         <div id="chatBox" class="chat-box"></div>
         <div style="padding:10px; background:var(--white); position:fixed; bottom:65px; width:100%; display:flex; gap:8px; box-sizing:border-box;">
-            <input id="mIn" placeholder="Сообщение..." style="flex:1; padding:10px; border-radius:20px; border:1px solid var(--gray); background:var(--bg); color:var(--text);">
-            <button onclick="sendMsg()" style="background:var(--main); color:white; border:none; border-radius:50%; width:40px; height:40px;">🚀</button>
+            <input id="mIn" placeholder="Сообщение..." style="flex:1; padding:12px; border-radius:20px; border:1px solid var(--gray); background:var(--bg); color:var(--text);">
+            <button onclick="sendMsg()" style="background:var(--main); color:white; border:none; border-radius:50%; width:44px; height:44px; font-size:20px;">🚀</button>
         </div>
     </div>
 
-    <div id="prof" class="page" style="text-align:center; padding:30px 20px;">
-        <div style="width:100px; height:100px; border-radius:50%; background:#eee; margin:0 auto 15px; overflow:hidden; border:3px solid var(--main);"><img id="myPic" src="" style="width:100%; height:100%; object-fit:cover;"></div>
-        <h2 id="myName" style="margin-bottom:5px;">Имя</h2>
-        <div id="myStatusDisplay" style="color:var(--gray); font-size:14px; margin-bottom:20px;">Нажми, чтобы поставить статус</div>
-        
-        <button class="fab" style="background:var(--gray);" onclick="ask('status')">💭 Изменить статус</button>
-        <button class="fab" style="background:var(--gray);" onclick="ask('ava')">🖼️ Сменить аватар (URL)</button>
-        <button class="fab" style="background:#5856d6;" onclick="toggleTheme()">🌙 Переключить тему</button>
-        <button class="fab" style="background:#ff3b30; margin-top:20px;" onclick="location.reload()">ВЫЙТИ</button>
+    <div id="prof" class="page" style="text-align:center;">
+        <div style="width:80px; height:80px; border-radius:50%; background:#eee; margin:20px auto; overflow:hidden; border:2px solid var(--main);"><img id="myPic" src="" style="width:100%; height:100%; object-fit:cover;"></div>
+        <h2 id="myName">Имя</h2>
+        <button class="fab" style="background:var(--gray)" onclick="ask('ava')">Сменить фото</button>
+        <button class="fab" style="background:#5856d6" onclick="toggleTheme()">🌙 Темная тема</button>
+        <button class="fab" style="background:#ff3b30" onclick="location.reload()">ВЫЙТИ</button>
     </div>
 
     <nav class="nav">
@@ -114,16 +82,18 @@
     </nav>
 </div>
 
-<div id="modal"><div class="modal-content"><h3 id="modalTitle" style="margin:0"></h3><textarea id="modalInput"></textarea>
-    <div style="display:flex; gap:10px; margin-top:15px;"><button onclick="closeModal()" style="flex:1; padding:12px; border:none; background:#eee; border-radius:12px; color:black;">Отмена</button><button id="modalBtn" style="flex:1; padding:12px; border:none; background:var(--main); color:white; border-radius:12px; font-weight:bold;">ОК</button></div>
+<div id="modal"><div class="modal-content">
+    <h3 id="modalTitle" style="margin:0; color:var(--text)"></h3>
+    <textarea id="modalInput" style="margin-top:10px;"></textarea>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+        <button onclick="closeModal()" style="flex:1; padding:12px; border:none; background:#eee; border-radius:12px; color:black;">Отмена</button>
+        <button id="modalBtn" style="flex:1; padding:12px; border:none; background:var(--main); color:white; border-radius:12px;">ОК</button>
+    </div>
 </div></div>
 
 <script>
-    const users = [
-        {login:"Умида", password:"Умида1", role:"student"}, {login:"Ерасыл", password:"аминсайта", role:"admin"},
-        {login:"Алина", password:"202564", role:"student"}, {login:"Мирас", password:"мирас111", role:"student"}
-        // ... добавь остальных сюда, если нужно
-    ];
+    // Твой список пользователей (сократил для краткости, добавь своих)
+    const users = [{login:"Ерасыл", password:"аминсайта", role:"admin"}, {login:"Умида", password:"Умида1", role:"student"}];
 
     firebase.initializeApp({
         apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc",
@@ -137,96 +107,89 @@
     let me = null, mode = "";
 
     function login() {
-        const u = uN.value.trim().toLowerCase(), p = uP.value.trim();
-        const f = users.find(x => x.login.toLowerCase() === u && x.password === p);
-        if(f) { me = f; init(); } else alert("Ошибка!");
+        const u = uN.value.trim(), p = uP.value.trim();
+        const f = users.find(x => x.login === u && x.password === p);
+        if(f) { me = f; init(); } else alert("Ошибка входа!");
     }
 
     function init() {
-        auth.style.display="none"; app.style.display="block";
+        document.getElementById('auth').style.display="none";
+        document.getElementById('app').style.display="block";
         myName.innerText = me.login;
         if(me.role === 'admin') document.querySelectorAll('[id^="adm-"]').forEach(x=>x.style.display="block");
-        db.collection("users").doc(me.login).onSnapshot(doc => { 
-            if(doc.exists) {
-                myPic.src = doc.data().avatar || ""; 
-                myStatusDisplay.innerText = doc.data().status || "Нет статуса";
-            }
-        });
         sync();
     }
-
-    function toggleTheme() { document.getElementById('body').classList.toggle('dark'); }
 
     function go(id, el) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById(id).classList.add('show'); el.classList.add('active');
+        document.getElementById(id).classList.add('show');
+        el.classList.add('active');
     }
+
+    function toggleTheme() { document.body.classList.toggle('dark'); }
 
     function ask(type) {
         mode = type;
-        const titles = {news:"Новость", hw:"Домашнее задание", story:"Фото (URL)", ava:"Аватарка (URL)", status: "Твой статус"};
-        modalTitle.innerText = titles[type]; modalInput.value = ""; modal.style.display = "flex";
-        modalBtn.onclick = () => {
-            const v = modalInput.value.trim(); if(!v) return;
-            if(mode==='news'||mode==='hw') db.collection(mode).add({m:v, u:me.login, t:Date.now(), likes:0});
-            if(mode==='story') db.collection("stories").add({img:v, u:me.login, t:Date.now()});
-            if(mode==='ava') db.collection("users").doc(me.login).set({avatar:v}, {merge:true});
-            if(mode==='status') db.collection("users").doc(me.login).set({status:v}, {merge:true});
-            closeModal();
-        };
+        const titles = {news:"Текст новости", hw:"Что задали?", ava:"Ссылка на фото", timetable:"Расписание (текстом)"};
+        modalTitle.innerText = titles[type];
+        modalInput.value = "";
+        modal.style.display = "flex";
+        modalBtn.onclick = save;
     }
+
     function closeModal() { modal.style.display = "none"; }
 
+    function save() {
+        const v = modalInput.value.trim();
+        if(!v) return;
+        if(mode==='news'||mode==='hw') db.collection(mode).add({m:v, u:me.login, t:Date.now()});
+        if(mode==='ava') db.collection("users").doc(me.login).set({avatar:v}, {merge:true});
+        if(mode==='timetable') db.collection("info").doc("main").set({data:v}, {merge:true});
+        closeModal();
+    }
+
     function sendMsg() {
-        if(mIn.value) {
-            const status = myStatusDisplay.innerText;
-            db.collection("chat").add({ m: mIn.value, u: me.login, t: Date.now(), s: status });
-        }
+        const val = mIn.value.trim();
+        if(val) db.collection("chat").add({ m: val, u: me.login, t: Date.now() });
         mIn.value = "";
     }
 
     function sync() {
-        db.collection("news").orderBy("t","desc").onSnapshot(s => {
-            listNews.innerHTML = "";
-            s.forEach(doc => {
-                const d = doc.data();
-                listNews.innerHTML += `<div class="post"><div class="post-text">${d.m}</div>
-                <div class="post-actions"><button style="border:none;background:none;font-size:18px;" onclick="db.collection('news').doc('${doc.id}').update({likes:${(d.likes||0)+1}})">❤️ ${d.likes||0}</button>
-                <span style="font-size:11px;color:var(--gray)">от ${d.u}</span></div></div>`;
-            });
-        });
-        db.collection("hw").orderBy("t","desc").onSnapshot(s => {
-            listHw.innerHTML = "";
-            s.forEach(doc => {
-                const d = doc.data();
-                listHw.innerHTML += `<div class="post" style="border-left:5px solid var(--main)"><div class="post-text"><b>${d.u} задал(а):</b>\n${d.m}</div></div>`;
-            });
-        });
-        db.collection("stories").orderBy("t","desc").onSnapshot(s => {
-            storyList.innerHTML = `<div class="story-item" onclick="ask('story')"><div class="ring add"></div><div style="font-size:11px">Моя</div></div>`;
-            s.forEach(doc => { storyList.innerHTML += `<div class="story-item" style="min-width:65px;text-align:center;"><div class="ring"><img src="${doc.data().img}"></div><div style="font-size:11px">${doc.data().u}</div></div>`; });
-        });
+        // Синхронизация чата
         db.collection("chat").orderBy("t","asc").onSnapshot(s => {
             chatBox.innerHTML = "";
             s.forEach(doc => {
-                const d = doc.data(); const isMe = d.u === me.login;
-                chatBox.innerHTML += `<div class="msg ${isMe?'me':'other'}">
-                    ${!isMe?`<div style="font-size:10px;font-weight:bold;">${d.u} <span class="status-tag">${d.s||''}</span></div>`:''}
-                    ${d.m}
-                </div>`;
+                const d = doc.data();
+                const isMe = d.u === me.login;
+                chatBox.innerHTML += `<div class="msg ${isMe?'me':'other'}">${!isMe?'<b>'+d.u+'</b><br>':''}${d.m}</div>`;
             });
             chatBox.scrollTop = chatBox.scrollHeight;
         });
+
+        // Синхронизация расписания
+        db.collection("info").doc("main").onSnapshot(doc => {
+            if(doc.exists) {
+                lessons-data.innerText = doc.data().data || "Пока не заполнено";
+                times-data.innerText = "Редактируется админом через кнопку выше";
+            }
+        });
+
+        // Лента и ДЗ
+        ['news', 'hw'].forEach(col => {
+            db.collection(col).orderBy("t","desc").onSnapshot(s => {
+                const container = document.getElementById('list-'+col);
+                container.innerHTML = "";
+                s.forEach(doc => {
+                    container.innerHTML += `<div class="post"><b>${doc.data().u}</b><br><div style="white-space:pre-wrap">${doc.data().m}</div></div>`;
+                });
+            });
+        });
+        
+        db.collection("users").doc(me.login).onSnapshot(doc => { if(doc.exists) myPic.src = doc.data().avatar || ""; });
     }
 </script>
 </body>
-    </html>
+</html>
 
-
-
-
-
-
-автор4е
                                                                                          
