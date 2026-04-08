@@ -3,127 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Школьный Портал 4 «Е»</title>
+    <title>Школа 4 «Е»: Официальный портал</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        :root { --school-bg: #f0f2f8; --accent: #007aff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--school-bg); margin: 0; padding-bottom: 50px; }
-        header { background: white; padding: 20px; text-align: center; border-bottom: 2px solid var(--accent); }
-        .container { max-width: 600px; margin: auto; padding: 15px; }
-        .card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        body { font-family: -apple-system, sans-serif; background: #f2f2f7; margin: 0; padding: 15px; color: #1c1c1e; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .hidden { display: none !important; }
         
-        /* Таблица расписания */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        th { color: var(--accent); }
+        /* Профиль */
+        .user-card { display: flex; align-items: center; gap: 15px; }
+        .user-ava { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #eee; border: 2px solid #007aff; }
+        .role-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #007aff; color: white; vertical-align: middle; }
 
-        /* Домашнее задание */
-        .hw-item { background: #f9f9f9; padding: 10px; border-left: 4px solid var(--accent); margin-bottom: 10px; border-radius: 5px; }
+        /* Личка */
+        #chatBox { height: 150px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 10px; font-size: 13px; border: 1px solid #eee; margin: 10px 0; }
+        .msg { margin-bottom: 5px; padding: 5px; border-radius: 5px; background: white; border-left: 3px solid #007aff; }
 
-        .btn { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .btn-orange { background: #ff9500; }
-        
-        /* Музыкальный плеер */
-        .music-player { display: flex; align-items: center; gap: 15px; background: #f1f1f1; padding: 10px; border-radius: 12px; }
-        
-        .go-social { display: block; text-align: center; margin-top: 30px; color: #888; text-decoration: none; font-size: 13px; }
+        /* Магазин ролей */
+        .shop-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .price { color: #ff9500; font-weight: bold; }
+
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .btn { background: #007aff; color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+        .btn-adm { background: #34c759; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1 style="margin:0; color:var(--accent);">🏫 Школа 4 «Е»</h1>
-    <p style="margin:5px 0 0; color:#666;">Личный кабинет ученика</p>
-</header>
+<div id="authBox" class="card" style="text-align: center; margin-top: 50px;">
+    <h2>🏫 Вход в систему</h2>
+    <input id="uL" placeholder="Твое имя">
+    <input id="uP" type="password" placeholder="Пароль">
+    <button class="btn" onclick="login()">Войти</button>
+</div>
 
-<div class="container">
-
-    <div class="card">
-        <h3><i class="fa-solid fa-calendar-days"></i> Расписание</h3>
-        <table>
-            <thead><tr><th>№</th><th>Урок</th><th>Время</th></tr></thead>
-            <tbody id="scheduleBody">
-                <tr><td>1</td><td>Русский язык</td><td>08:30</td></tr>
-                <tr><td>2</td><td>Математика</td><td>09:25</td></tr>
-                <tr><td>3</td><td>Английский</td><td>10:30</td></tr>
-                <tr><td>4</td><td>Литературное чтение</td><td>11:25</td></tr>
-                <tr><td>5</td><td>Физкультура</td><td>12:20</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="card">
-        <h3><i class="fa-solid fa-book-open"></i> Домашнее задание</h3>
-        <div id="hwList">Загрузка заданий...</div>
-        <button id="adminHwBtn" class="btn" style="display:none; margin-top:10px; background:#34c759;" onclick="addHw()">+ Добавить ДЗ</button>
-    </div>
-
-    <div class="card">
-        <h3><i class="fa-solid fa-dice"></i> Кто идет к доске?</h3>
-        <button class="btn btn-orange" onclick="roll()">Крутить рулетку</button>
-        <h2 id="rollRes" style="text-align:center; color:#ff9500; font-size: 32px; margin-top: 15px;">?</h2>
-    </div>
-
-    <div class="card">
-        <h3><i class="fa-solid fa-music"></i> Музыка для уроков</h3>
-        <div class="music-player">
-            <button class="btn" style="width:50px; padding:10px;" onclick="toggleMusic()"><i id="playIcon" class="fa-solid fa-play"></i></button>
-            <div style="font-size:14px;">Лофай для концентрации</div>
-            <audio id="studyAudio" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+<div id="app" class="hidden">
+    <div class="card user-card">
+        <img id="myAva" src="https://i.imgur.com/6VBx3io.png" class="user-ava">
+        <div>
+            <b id="myName">Имя</b> <span id="myRole" class="role-tag">Ученик</span>
+            <div style="font-size: 12px; color: #888; margin-top: 4px;">Баланс: <span id="myBal">0</span> 💰</div>
         </div>
     </div>
 
-    <a href="social.html" class="go-social">⚠️ Покинуть школу и перейти в Соцсеть</a>
+    <div class="card">
+        <h3>🏪 Магазин ролей</h3>
+        <div class="shop-item"><span>🌟 VIP статус</span> <span class="price">2000 💰</span></div>
+        <div class="shop-item"><span>🛡️ Модератор</span> <span class="price">5000 💰</span></div>
+        <p style="font-size: 11px; color: #888; text-align: center;">* Для покупки пиши Ерасылу в личку!</p>
+    </div>
+
+    <div class="card">
+        <h3>✉️ Личные сообщения</h3>
+        <div id="chatBox"></div>
+        <select id="sendTo"><option value="all">Всем (Общий)</option></select>
+        <input id="msgText" placeholder="Напиши что-нибудь...">
+        <button class="btn" onclick="sendMsg()" style="padding: 8px;">Отправить</button>
+    </div>
+
+    <div id="admUI" class="card hidden" style="border: 2px solid #34c759;">
+        <h4 style="color:#34c759; margin:0 0 10px 0;">👑 Панель Ерасыла</h4>
+        <input id="admUser" placeholder="Имя ученика">
+        <input id="admVal" placeholder="Значение (Роль или Баллы)">
+        <button class="btn btn-adm" onclick="giveRole()">Выдать роль</button>
+        <button class="btn btn-adm" onclick="giveMoney()">Выдать баллы</button>
+    </div>
+
+    <div class="card">
+        <h3>📅 Расписание</h3>
+        <div id="schShow">Загрузка...</div>
+    </div>
+
+    <a href="social.html" style="display:block; text-align:center; color:#007aff; text-decoration:none; margin-bottom: 20px;">В Соцсеть ➔</a>
 </div>
 
 <script>
-// ТВОЙ ПОЛНЫЙ СПИСОК (29 ЧЕЛОВЕК)
-const students = ["Умида", "Азия", "Шахсанем", "Шахмир", "Эмир", "Мирас", "Генжеваева_Дилнура", "Самая", "Шахло", "Дидар", "Айсара", "Берик", "Серик", "Мамутова_Дилнура", "Ерасыл", "Асад", "Виктория", "Кошкарова_Дилнура", "Женис", "Барно", "Рашит", "Жасмина", "Темирбаева_Жасмина", "Манас", "Асал", "Алина", "Эла", "Тумирис", "Асемай"];
-
-// Настройка Firebase
-const firebaseConfig = { 
-    apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc", 
-    projectId: "e-my-fam" 
-};
+const firebaseConfig = { apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc", projectId: "e-my-fam" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Проверка админа (для Ерасыла)
-const myName = localStorage.getItem('u_name');
-if(myName === "Ерасыл") document.getElementById('adminHwBtn').style.display = "block";
+const students = ["Умида", "Азия", "Шахсанем", "Шахмир", "Эмир", "Мирас", "Генжеваева_Дилнура", "Самая", "Шахло", "Дидар", "Айсара", "Берик", "Серик", "Мамутова_Дилнура", "Ерасыл", "Асад", "Виктория", "Кошкарова_Дилнура", "Женис", "Барно", "Рашит", "Жасмина", "Темирбаева_Жасмина", "Манас", "Асал", "Алина", "Эла", "Тумирис", "Асемай"];
 
-// Функции
-function roll() {
-    const winner = students[Math.floor(Math.random() * students.length)];
-    document.getElementById('rollRes').innerText = winner;
-    confetti({ particleCount: 150, spread: 70, origin: { y: 0.7 } });
+let me = "";
+
+function login() {
+    const n = document.getElementById('uL').value.trim();
+    const p = document.getElementById('uP').value.trim();
+    if((n === "Ерасыл" && p === "аминсайта") || (students.includes(n) && p !== "")) {
+        me = n;
+        document.getElementById('authBox').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        document.getElementById('myName').innerText = me;
+        if(me === "Ерасыл") document.getElementById('admUI').classList.remove('hidden');
+        
+        // Заполняем список для лички
+        const sel = document.getElementById('sendTo');
+        students.forEach(s => { if(s !== me) sel.innerHTML += `<option value="${s}">${s}</option>`; });
+        
+        initUser();
+        listenMessages();
+    } else { alert("Ошибка!"); }
 }
 
-function toggleMusic() {
-    const audio = document.getElementById('studyAudio');
-    const icon = document.getElementById('playIcon');
-    if (audio.paused) { audio.play(); icon.className = "fa-solid fa-pause"; }
-    else { audio.pause(); icon.className = "fa-solid fa-play"; }
-}
-
-// Загрузка ДЗ из базы
-db.collection("homework").orderBy("t", "desc").onSnapshot(s => {
-    const list = document.getElementById('hwList');
-    list.innerHTML = "";
-    if (s.empty) list.innerHTML = "Заданий пока нет!";
-    s.forEach(doc => {
-        list.innerHTML += `<div class="hw-item"><b>${doc.data().subject}:</b> ${doc.data().task}</div>`;
+function initUser() {
+    db.collection("users").doc(me).onSnapshot(doc => {
+        if(doc.exists) {
+            const d = doc.data();
+            document.getElementById('myBal').innerText = d.bal || 0;
+            document.getElementById('myRole').innerText = d.role || "Ученик";
+            if(d.ava) document.getElementById('myAva').src = d.ava;
+        } else {
+            db.collection("users").doc(me).set({ bal: 0, role: "Ученик", ava: "" });
+        }
     });
-});
+}
 
-function addHw() {
-    const sub = prompt("Предмет:");
-    const task = prompt("Что задали?");
-    if(sub && task) db.collection("homework").add({ subject: sub, task: task, t: Date.now() });
+// ЛОГИКА ЛИЧКИ
+function sendMsg() {
+    const to = document.getElementById('sendTo').value;
+    const txt = document.getElementById('msgText').value;
+    if(txt) {
+        db.collection("messages").add({ from: me, to: to, msg: txt, time: Date.now() });
+        document.getElementById('msgText').value = "";
+    }
+}
+
+function listenMessages() {
+    db.collection("messages").orderBy("time", "asc").limitToLast(20).onSnapshot(s => {
+        const box = document.getElementById('chatBox'); box.innerHTML = "";
+        s.forEach(doc => {
+            const d = doc.data();
+            // Показываем если сообщение всем ИЛИ лично мне ИЛИ от меня
+            if(d.to === "all" || d.to === me || d.from === me) {
+                const label = d.to === "all" ? "[ОБЩИЙ]" : `[ЛС для ${d.to}]`;
+                box.innerHTML += `<div class="msg"><b>${d.from} ${label}:</b> ${d.msg}</div>`;
+            }
+        });
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
+// АДМИНКА ЕРАСЫЛА
+function giveRole() {
+    const u = document.getElementById('admUser').value;
+    const r = document.getElementById('admVal').value;
+    db.collection("users").doc(u).update({ role: r });
+    alert("Роль выдана!");
+}
+
+function giveMoney() {
+    const u = document.getElementById('admUser').value;
+    const m = parseInt(document.getElementById('admVal').value);
+    db.collection("users").doc(u).update({ bal: firebase.firestore.FieldValue.increment(m) });
+    alert("Баллы начислены!");
 }
 </script>
 </body>
