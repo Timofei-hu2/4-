@@ -3,124 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>School Universe Phantom</title>
+    <title>Universe Master Edition</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --main: #007aff; --social: #5856d6; --bg: #f2f2f7; --white: #ffffff; --text: #000000; --gray: #8e8e93; --card: #ffffff; }
-        body.dark { --bg: #000000; --white: #1c1c1e; --text: #ffffff; --card: #1c1c1e; }
-        /* СЕКРЕТНЫЙ РЕЖИМ */
-        body.matrix { filter: sepia(100%) hue-rotate(90deg) brightness(1.2); }
+        :root { --main: #007aff; --bg: #f2f2f7; --white: #ffffff; --text: #000000; --accent: #ff2d55; }
+        body.dark { --bg: #0b0b0d; --white: #1c1c1e; --text: #ffffff; }
         
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; transition: 0.5s; }
-        .page { display: none; padding: 15px; animation: slideUp 0.4s ease-out; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; padding-bottom: 90px; }
+        .page { display: none; padding: 20px; animation: scaleUp 0.3s ease; }
         .active { display: block; }
-        @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes scaleUp { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-        .card { background: var(--card); padding: 18px; border-radius: 22px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
-        .btn { background: var(--main); color: white; border: none; padding: 16px; border-radius: 14px; width: 100%; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .card { background: var(--white); padding: 20px; border-radius: 25px; margin-bottom: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.04); position: relative; }
+        .btn { background: var(--main); color: white; border: none; padding: 16px; border-radius: 18px; width: 100%; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.96); }
+
+        /* ЗВАНИЯ */
+        .rank-tag { font-size: 10px; padding: 4px 10px; border-radius: 20px; background: var(--main); color: white; text-transform: uppercase; margin-left: 10px; }
         
-        /* ПУЛЬСИРУЮЩАЯ ДНЮХА */
-        .pulse { animation: pulseAnim 2s infinite; }
-        @keyframes pulseAnim { 0% { transform: scale(1); } 50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(255,204,0,0.4); } 100% { transform: scale(1); } }
+        /* ЧАТ СООБЩЕНИЯ */
+        .msg { margin-bottom: 15px; display: flex; flex-direction: column; }
+        .msg-bubble { padding: 12px 16px; border-radius: 20px; max-width: 80%; font-size: 14px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .my-msg { align-items: flex-end; }
+        .my-msg .msg-bubble { background: var(--main); color: white; }
+        .other-msg .msg-bubble { background: var(--white); color: var(--text); border: 1px solid #eee; }
 
-        .nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: var(--white); display: flex; border-top: 1px solid rgba(0,0,0,0.05); z-index: 100; }
-        .nav-item { flex: 1; border: none; background: none; color: var(--gray); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; }
+        .nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: rgba(var(--white), 0.85); backdrop-filter: blur(20px); display: flex; z-index: 1000; }
+        .nav-item { flex: 1; border: none; background: none; color: #8e8e93; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
         .nav-item.selected { color: var(--main); }
 
-        #topAlert { display: none; background: #ff3b30; color: white; padding: 12px; text-align: center; font-weight: bold; position: fixed; width: 100%; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        
-        textarea, input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 14px; box-sizing: border-box; margin-bottom: 10px; background: var(--white); color: var(--text); font-size: 16px; }
-        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200; align-items:center; justify-content:center; backdrop-filter: blur(8px); }
+        #onlineCounter { font-size: 12px; color: #34c759; margin-bottom: 10px; display: block; }
     </style>
 </head>
 <body>
 
-<div id="topAlert">📢 ОБЪЯВЛЕНИЕ: Загрузка...</div>
-
-<div id="loginView" style="text-align: center; padding: 120px 25px;">
-    <h1 style="font-size: 42px; margin-bottom: 10px; letter-spacing: -2px;">Universe</h1>
-    <p style="color: var(--gray); margin-bottom: 40px; font-weight: 300;">Next Gen School Hub</p>
-    <input id="uL" placeholder="Имя">
-    <input id="uP" type="password" placeholder="Пароль">
-    <button class="btn" onclick="doLogin()">Войти</button>
-</div>
-
 <div id="mainView" style="display:none;">
     
     <div id="p-school" class="page active">
-        <div class="card" style="background: linear-gradient(135deg, #5856d6, #007aff); color: white; text-align: center;" onclick="go('p-social', document.querySelectorAll('.nav-item')[1])">
-            <h2 style="margin: 0;">🌟 СОЦСЕТЬ</h2>
-            <p style="margin: 5px 0 0; opacity: 0.8;">Что нового в классе?</p>
+        <div class="card" style="background: linear-gradient(135deg, #007aff, #5856d6); color: white;" onclick="go('p-social')">
+            <h2 style="margin:0">✨ Соцсеть Класса</h2>
+            <p style="opacity: 0.8; font-size: 12px;">Проверь новые лайки и посты</p>
         </div>
 
-        <div id="nowStatus" style="background: #34c759; color: white; padding: 15px; border-radius: 16px; text-align: center; font-weight: bold; margin: 15px 0;">...</div>
-
-        <div id="adm-tools" style="display:none; margin-bottom: 15px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="btn" style="background:#34c759; font-size:12px;" onclick="ask('now')">Статус</button>
-                <button class="btn" style="background:#ff9500; font-size:12px;" onclick="ask('bday')">Днюха</button>
-                <button class="btn" style="background:#5856d6; font-size:12px;" onclick="ask('time')">Уроки</button>
-                <button class="btn" style="background:#ff3b30; font-size:12px;" onclick="ask('hw')">+ ДЗ</button>
+        <div id="adm-tools" style="display:none; margin-top: 15px;">
+            <div class="card" style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404;">
+                <h4 style="margin:0">Команда Админа:</h4>
+                <button class="btn" style="background: #ffc107; color: black; margin-top:10px" onclick="pickRandom()">🎯 Кто к доске?</button>
+                <div id="luckyResult" style="text-align:center; font-weight:bold; margin-top:10px"></div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 15px 0;">
+                <button class="btn" onclick="ask('now')">Статус</button>
+                <button class="btn" style="background: var(--accent)" onclick="ask('hw')">+ ДЗ</button>
             </div>
         </div>
 
-        <div id="bdayCard" class="card" style="border-left: 8px solid #ffcc00; background: #fffde7;">
-            <div id="bdayBox" style="color: #000;">🎂 Именинники...</div>
-        </div>
-
-        <h3>📅 Расписание</h3>
-        <div class="card" id="scheduleBox" style="white-space: pre-wrap;">...</div>
-
-        <h3>📝 Домашнее задание</h3>
+        <h3 style="margin-top:20px">📖 Домашнее задание</h3>
         <div id="hwList"></div>
     </div>
 
     <div id="p-social" class="page">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0;">Лента</h2>
-            <button class="btn" style="width:50px; border-radius:50%;" onclick="ask('post')">+</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <button onclick="go('p-school')" style="background:none; border:none; font-size:20px;">🏠</button>
+            <h2 style="margin:0">Лента</h2>
+            <button class="btn" style="width:45px; height:45px; border-radius:50%" onclick="ask('post')">+</button>
         </div>
         <div id="postList"></div>
     </div>
 
     <div id="p-chat" class="page">
-        <h2>Чат</h2>
-        <div id="chatBox" style="height: calc(100vh - 240px); overflow-y: auto;"></div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <input id="mIn" placeholder="Сообщение..." style="margin:0">
-            <button class="btn" style="width:60px; margin:0" onclick="send()">🚀</button>
+        <span id="onlineCounter">● 14 человек онлайн</span>
+        <div id="chatBox" style="height: calc(100vh - 280px); overflow-y: auto;"></div>
+        <div style="display:flex; gap:10px; margin-top:15px; background: var(--white); padding: 10px; border-radius: 20px;">
+            <input id="mIn" placeholder="Сообщение..." style="flex:1; border:none; background:none; outline:none; color: var(--text);">
+            <button class="btn" style="width:60px; padding:10px;" onclick="send()">🚀</button>
         </div>
     </div>
 
     <div id="p-prof" class="page" style="text-align: center;">
         <div class="card">
-            <img id="myAva" onclick="secretClick()" src="" style="width:130px; height:130px; border-radius:50%; border:5px solid var(--main); object-fit: cover; transition: 0.3s;">
-            <h2 id="myName">...</h2>
-            <div id="myRank">...</div>
-            <p id="myStatus" style="color:var(--gray);"></p>
+            <img id="myAva" src="" style="width:100px; height:100px; border-radius:50%; border: 3px solid var(--main);">
+            <h2 id="myName">... <span id="myRank" class="rank-tag">Новичок</span></h2>
+            <p id="myBio" style="color: #8e8e93;">Ученик Universe</p>
         </div>
-        <button class="btn" style="background:var(--gray); margin-bottom:10px;" onclick="ask('ava')">Фото</button>
-        <button class="btn" style="background:var(--gray); margin-bottom:10px;" onclick="ask('status')">Статус</button>
-        <button class="btn" style="background:var(--social);" onclick="document.body.classList.toggle('dark')">Тема</button>
-        <button class="btn" style="background:#ff3b30; margin-top:20px;" onclick="doLogout()">Выход</button>
+        <button class="btn" style="background: #8e8e93; margin-bottom:10px" onclick="ask('ava')">Сменить фото</button>
+        <button class="btn" style="background: var(--main)" onclick="document.body.classList.toggle('dark')">🌗 Тема</button>
+        <button class="btn" style="background: #ff3b30; margin-top: 30px;" onclick="doLogout()">Выход</button>
     </div>
 
     <nav class="nav">
-        <div class="nav-item selected" onclick="go('p-school', this)">🏫 Школа</div>
-        <div class="nav-item" onclick="go('p-social', this)">🌟 Лента</div>
-        <div class="nav-item" onclick="go('p-chat', this)">💬 Чат</div>
-        <div class="nav-item" onclick="go('p-prof', this)">👤 Профиль</div>
+        <div class="nav-item selected" id="n-school" onclick="go('p-school')">🏠 Школа</div>
+        <div class="nav-item" id="n-chat" onclick="go('p-chat')">💬 Чат</div>
+        <div class="nav-item" id="n-prof" onclick="go('p-prof')">👤 Профиль</div>
     </nav>
 </div>
 
-<div id="modal">
-    <div style="background: var(--white); padding: 25px; border-radius: 25px; width: 85%; max-width: 400px;">
+<div id="loginView" style="padding: 100px 40px; text-align: center;">
+    <h1>Universe</h1>
+    <input id="uL" placeholder="Имя" style="width:100%; padding:15px; margin-bottom:10px; border-radius:15px; border:1px solid #ddd;">
+    <input id="uP" type="password" placeholder="Пароль" style="width:100%; padding:15px; margin-bottom:20px; border-radius:15px; border:1px solid #ddd;">
+    <button class="btn" onclick="doLogin()">Войти</button>
+</div>
+
+<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(5px);">
+    <div style="background: var(--white); padding: 30px; border-radius: 30px; width: 85%;">
         <h3 id="mTitle">Редактировать</h3>
-        <textarea id="mVal"></textarea>
-        <input type="text" id="mImg" placeholder="Ссылка на картинку" style="display:none">
-        <button class="btn" id="mSave">Сохранить</button>
-        <button class="btn" style="background:none; color:var(--gray); margin-top:10px;" onclick="document.getElementById('modal').style.display='none'">Отмена</button>
+        <textarea id="mVal" style="width:100%; height: 100px; border-radius: 15px; padding: 10px;"></textarea>
+        <button class="btn" id="mSave" style="margin-top:10px;">Сохранить</button>
     </div>
 </div>
 
@@ -140,56 +130,54 @@
         appId: "1:538837431491:web:9cb1d4706b4d7e97679e76"
     });
     const db = firebase.firestore();
-    let me = null, mode = "", clickCount = 0;
+    let me = null, mode = "";
+
+    // 🏆 УМНАЯ СИСТЕМА РАНГОВ
+    function checkRank(postCount) {
+        if(postCount > 20) return "Легенда";
+        if(postCount > 10) return "Олд";
+        if(postCount > 5) return "Актив";
+        return "Новичок";
+    }
 
     function doLogin() {
-        const u = document.getElementById('uL').value.trim();
-        const p = document.getElementById('uP').value.trim();
+        const u = document.getElementById('uL').value.trim(), p = document.getElementById('uP').value.trim();
         const f = users.find(x => x.login === u && x.password === p);
-        if(f) { me = f; localStorage.setItem('school_phantom_v1', JSON.stringify(f)); startApp(); }
-        else alert("Доступ запрещен!");
+        if(f) { me = f; localStorage.setItem('u_session_v2', JSON.stringify(f)); startApp(); }
+        else alert("Ошибка!");
     }
 
     window.onload = () => {
-        const s = localStorage.getItem('school_phantom_v1');
+        const s = localStorage.getItem('u_session_v2');
         if(s) { me = JSON.parse(s); startApp(); }
     };
 
     function startApp() {
         document.getElementById('loginView').style.display = "none";
         document.getElementById('mainView').style.display = "block";
-        document.getElementById('myName').innerText = me.login;
-        if(me.role === 'admin' || me.role === 'monitor') document.getElementById('adm-tools').style.display = "block";
+        document.getElementById('myName').innerHTML = me.login + ' <span id="myRank" class="rank-tag">...</span>';
+        if(me.role === 'admin') document.getElementById('adm-tools').style.display = "block";
 
-        // Система уведомлений
-        db.collection("info").doc("now").onSnapshot(d => {
-            const msg = d.exists ? d.data().m : "Уроков нет";
-            document.getElementById('nowStatus').innerText = msg;
-            const al = document.getElementById('topAlert');
-            al.innerText = "📢 " + msg;
-            al.style.display = "block";
-            setTimeout(() => al.style.display = "none", 5000);
-        });
-
-        db.collection("info").doc("bdays").onSnapshot(d => { 
-            const box = document.getElementById('bdayBox');
-            const hasBday = d.exists && d.data().list.length > 3;
-            box.innerText = "🎂 " + (hasBday ? d.data().list : "Нет именинников");
-            document.getElementById('bdayCard').className = hasBday ? "card pulse" : "card";
-        });
-
-        db.collection("info").doc("main").onSnapshot(d => { if(d.exists) document.getElementById('scheduleBox').innerText = d.data().d; });
-
-        db.collection("posts").orderBy("t","desc").onSnapshot(s => {
+        // Посты и Ранги
+        db.collection("posts").onSnapshot(s => {
+            let myPosts = 0;
             const list = document.getElementById('postList'); list.innerHTML = "";
-            let lks = 0;
             s.forEach(doc => {
-                const d = doc.data(); if(d.u === me.login) lks += (d.l || 0);
-                const img = d.img ? `<img src="${d.img}" style="width:100%; border-radius:15px; margin:10px 0;">` : "";
-                list.innerHTML += `<div class="card"><b>@${d.u}</b><p>${d.m}</p>${img}
-                <button class="btn" style="width:80px; background:none; color:#ff2d55; border:1px solid #ddd" onclick="db.collection('posts').doc('${doc.id}').update({l:${(d.l||0)+1}})">❤️ ${d.l||0}</button></div>`;
+                const d = doc.data();
+                if(d.u === me.login) myPosts++;
+                list.innerHTML += `<div class="card"><b>@${d.u}</b><p>${d.m}</p><button class="btn" style="width:70px; background:none; color:red; border:1px solid #ddd" onclick="db.collection('posts').doc('${doc.id}').update({l:${(d.l||0)+1}})">❤️ ${d.l||0}</button></div>`;
             });
-            updateRank(lks);
+            document.getElementById('myRank').innerText = checkRank(myPosts);
+        });
+
+        // Живой Чат
+        db.collection("chat").orderBy("t","asc").onSnapshot(s => {
+            const b = document.getElementById('chatBox'); b.innerHTML = "";
+            s.forEach(d => {
+                const isMe = d.data().u === me.login;
+                b.innerHTML += `<div class="msg ${isMe?'my-msg':'other-msg'}"><div class="msg-bubble"><b>${d.data().u}</b><br>${d.data().m}</div></div>`;
+            });
+            b.scrollTop = b.scrollHeight;
         });
 
         db.collection("hw").orderBy("t","desc").onSnapshot(s => {
@@ -197,71 +185,50 @@
             s.forEach(d => { l.innerHTML += `<div class="card" style="border-left:5px solid var(--main)"><b>${d.data().u}:</b><br>${d.data().m}</div>`; });
         });
 
-        db.collection("chat").orderBy("t","asc").onSnapshot(s => {
-            const b = document.getElementById('chatBox'); b.innerHTML = "";
-            s.forEach(d => {
-                const isMe = d.data().u === me.login;
-                b.innerHTML += `<div style="text-align:${isMe?'right':'left'}; margin-bottom:12px;"><div style="display:inline-block; padding:12px; border-radius:18px; background:${isMe?'var(--main)':'var(--white)'}; color:${isMe?'white':'black'}; border:1px solid #ddd"><b>${d.data().u}</b><br>${d.data().m}</div></div>`;
-            });
-            b.scrollTop = b.scrollHeight;
-        });
-
-        db.collection("users").doc(me.login).onSnapshot(d => { 
-            if(d.exists) { 
-                document.getElementById('myAva').src = d.data().a || "https://cdn-icons-png.flaticon.com/512/149/149071.png"; 
-                document.getElementById('myStatus').innerText = d.data().s || "Elite Student";
-            } 
-        });
+        db.collection("users").doc(me.login).onSnapshot(d => { if(d.exists) document.getElementById('myAva').src = d.data().a || "https://cdn-icons-png.flaticon.com/512/149/149071.png"; });
     }
-
-    function secretClick() {
-        clickCount++;
-        if(clickCount >= 5) {
-            document.body.classList.toggle('matrix');
-            clickCount = 0;
-            alert("Секретный режим активирован!");
-        }
-    }
-
-    function updateRank(l) {
-        let r = "НОВИЧОК"; if(l>20) r = "МАСТЕР"; if(l>50) r = "ПРИЗРАК КЛАССА";
-        document.getElementById('myRank').innerText = "Ранг: " + r;
-    }
-
-    function ask(m) {
-        mode = m;
-        document.getElementById('mImg').style.display = (m==='post') ? 'block' : 'none';
-        document.getElementById('modal').style.display = "flex";
-    }
-
-    document.getElementById('mSave').onclick = () => {
-        const v = document.getElementById('mVal').value.trim();
-        const i = document.getElementById('mImg').value.trim();
-        if(!v) return;
-        if(mode==='now') db.collection("info").doc("now").set({m:v});
-        if(mode==='bday') db.collection("info").doc("bdays").set({list:v});
-        if(mode==='time') db.collection("info").doc("main").set({d:v});
-        if(mode==='hw') db.collection("hw").add({m:v, u:me.login, t:Date.now()});
-        if(mode==='post') db.collection("posts").add({m:v, u:me.login, t:Date.now(), l:0, img:i});
-        if(mode==='ava') db.collection("users").doc(me.login).set({a:v}, {merge:true});
-        if(mode==='status') db.collection("users").doc(me.login).set({s:v}, {merge:true});
-        document.getElementById('modal').style.display = "none";
-    };
 
     function send() {
         const i = document.getElementById('mIn');
-        if(i.value.trim()) db.collection("chat").add({m:i.value, u:me.login, t:Date.now()});
+        if(i.value.trim()) {
+            db.collection("chat").add({m:i.value, u:me.login, t:Date.now()});
+            confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } }); // ПРАЗДНИК ПРИ ОТПРАВКЕ
+        }
         i.value = "";
     }
 
-    function go(id, btn) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('selected'));
-        document.getElementById(id).classList.add('active');
-        btn.classList.add('selected');
+    function pickRandom() {
+        const names = users.map(u => u.login);
+        let res = document.getElementById('luckyResult');
+        let i = 0;
+        let timer = setInterval(() => {
+            res.innerText = names[Math.floor(Math.random() * names.length)];
+            i++;
+            if(i > 10) { clearInterval(timer); res.innerText = "🔥 " + res.innerText + " 🔥"; }
+        }, 100);
     }
 
-    function doLogout() { localStorage.removeItem('school_phantom_v1'); location.reload(); }
+    function go(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('selected'));
+        document.getElementById(id).classList.add('active');
+        const map = {'p-school':'n-school', 'p-chat':'n-chat', 'p-prof':'n-prof'};
+        if(map[id]) document.getElementById(map[id]).classList.add('selected');
+    }
+
+    function ask(m) { mode = m; document.getElementById('modal').style.display = "flex"; }
+
+    document.getElementById('mSave').onclick = () => {
+        const v = document.getElementById('mVal').value.trim();
+        if(!v) return;
+        if(mode==='hw') db.collection("hw").add({m:v, u:me.login, t:Date.now()});
+        if(mode==='post') db.collection("posts").add({m:v, u:me.login, t:Date.now(), l:0});
+        if(mode==='ava') db.collection("users").doc(me.login).set({a:v}, {merge:true});
+        document.getElementById('modal').style.display = "none";
+        document.getElementById('mVal').value = "";
+    };
+
+    function doLogout() { localStorage.clear(); location.reload(); }
 </script>
 </body>
 </html>
