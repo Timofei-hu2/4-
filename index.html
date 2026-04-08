@@ -3,238 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Universe OS: Brothers</title>
+    <title>Universe App</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --main: #007aff; --bg: #f2f2f7; --white: #ffffff; --text: #000000; --gray: #8e8e93; }
-        /* Стиль СОЦСЕТИ */
-        body.social-mode { --main: #ff2d55; --bg: #fce4ec; }
-        /* Темная тема */
-        body.dark { --bg: #1c1c1e; --white: #2c2c2e; --text: #ffffff; }
-
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.4s; padding-bottom: 85px; }
-        .page { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
-        .active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .card { background: var(--white); padding: 15px; border-radius: 22px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .btn { background: var(--main); color: white; border: none; padding: 14px; border-radius: 16px; width: 100%; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        :root { --main: #007aff; --bg: #f2f2f7; --white: #ffffff; --text: #000000; --gray: #8e8e93; --light-blue: #e1f5fe; --green-chat: #dcf8c6; }
         
-        .nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: rgba(var(--white), 0.9); backdrop-filter: blur(15px); display: flex; border-top: 1px solid rgba(0,0,0,0.1); z-index: 1000; }
-        .nav-item { flex: 1; border: none; background: none; color: var(--gray); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; }
+        body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 90px; }
+        
+        /* HEADER */
+        header { background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); padding: 15px 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* CARDS */
+        .page { display: none; padding: 15px; animation: slideIn 0.3s ease-out; }
+        .active { display: block; }
+        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .card { background: var(--white); padding: 18px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        /* BUTTONS */
+        .btn { background: var(--main); color: white; border: none; padding: 14px 20px; border-radius: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
+        .btn-delete { background: #ff3b30; padding: 5px 10px; font-size: 10px; width: auto; margin-top: 5px; }
+
+        /* WHATSAPP CHAT */
+        #chatBox { height: calc(100vh - 280px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px; background: #e5ddd5; border-radius: 20px; }
+        .msg { max-width: 75%; padding: 8px 12px; border-radius: 15px; position: relative; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .msg.me { align-self: flex-end; background: var(--green-chat); border-bottom-right-radius: 2px; }
+        .msg.him { align-self: flex-start; background: var(--white); border-bottom-left-radius: 2px; }
+        .msg-info { font-size: 10px; color: var(--gray); margin-top: 4px; display: flex; justify-content: flex-end; gap: 5px; }
+        .msg-user { font-weight: bold; font-size: 12px; margin-bottom: 3px; display: block; }
+
+        /* NAV */
+        .nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: rgba(255,255,255,0.9); backdrop-filter: blur(15px); display: flex; border-top: 1px solid #ddd; }
+        .nav-item { flex: 1; border: none; background: none; color: var(--gray); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; gap: 4px; }
+        .nav-item i { font-size: 22px; }
         .nav-item.selected { color: var(--main); }
 
-        .mode-switcher { position: fixed; top: 15px; right: 15px; background: var(--main); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 1100; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        
-        input, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; background: var(--white); color: var(--text); margin-bottom: 10px; box-sizing: border-box; }
-        #chatBox { height: 300px; overflow-y: auto; margin-bottom: 10px; }
+        /* LOGIN */
+        .login-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; background: white; }
+        input { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid #ddd; margin-bottom: 12px; font-size: 16px; background: var(--bg); }
     </style>
 </head>
-<body class="web-mode">
+<body>
 
-<div class="mode-switcher" onclick="toggleMode()" id="mLabel">🏛️ Режим: Школа</div>
+<div id="loginView" class="login-screen">
+    <div style="font-size: 60px; margin-bottom: 20px;">🌌</div>
+    <h2 style="margin-bottom: 30px;">Universe Login</h2>
+    <input id="uL" type="text" placeholder="Имя пользователя">
+    <input id="uP" type="password" placeholder="Пароль">
+    <button class="btn" onclick="auth()">Войти в аккаунт</button>
+</div>
 
 <div id="mainView" style="display:none;">
-    
-    <div id="p-web" class="page active">
-        <div class="card" style="background: var(--main); color: white;">
-            <h2 style="margin:0">Школьный Портал</h2>
-            <p id="timer" style="font-size:12px; margin-top:5px; opacity:0.9"></p>
-        </div>
+    <header>
+        <b id="headerTitle">Universe</b>
+        <span id="uNameDisplay" style="font-size: 13px; color: var(--gray);"></span>
+    </header>
 
+    <div id="p-school" class="page active">
+        <div class="card" style="background: linear-gradient(135deg, #007aff, #00c6ff); color: white;">
+            <h3>Школьный Портал</h3>
+            <p>10 "Б" класс. Добро пожаловать!</p>
+        </div>
+        
         <div class="card">
-            <b>🎲 Кто к доске?</b>
-            <button class="btn" style="background:#ff9500; margin-top:10px" onclick="roll()">Случайный выбор</button>
-            <h3 id="rollRes" style="text-align:center; color:var(--main)"></h3>
-        </div>
-
-        <div class="card">
-            <b>📂 Облако Шпор</b>
-            <div id="shporaBox" style="margin-top:10px"></div>
-            <button class="btn" style="background:var(--gray); height:35px; padding:0" onclick="ask('shpora')">+</button>
-        </div>
-    </div>
-
-    <div id="p-social" class="page">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-            <h2>Universe Social</h2>
-            <button class="btn" style="width:40px; border-radius:50%" onclick="ask('post')">+</button>
-        </div>
-
-        <div class="card">
-            <b>📊 Вайб класса: <span id="vibeVal">50</span>%</b>
-            <div style="height:8px; background:#eee; border-radius:4px; margin:10px 0; overflow:hidden">
-                <div id="vibeFill" style="height:100%; background:var(--main); width:50%; transition:1s"></div>
+            <h3><i class="fa-solid fa-bullhorn" style="color:var(--main)"></i> Новости</h3>
+            <div id="newsFeed"></div>
+            <div id="admin-news" style="display:none; margin-top:10px;">
+                <button class="btn" onclick="addNews()"><i class="fa-solid fa-plus"></i> Добавить новость</button>
             </div>
-            <button onclick="setVibe(true)" style="border:none; background:none; font-size:20px">🔥</button>
-            <button onclick="setVibe(false)" style="border:none; background:none; font-size:20px">😴</button>
         </div>
-
-        <div id="feed"></div>
     </div>
 
     <div id="p-chat" class="page">
-        <h2>Чат 💬</h2>
         <div id="chatBox"></div>
-        <div style="display:flex; gap:10px">
-            <input id="mIn" placeholder="Напиши !шар...">
-            <button class="btn" style="width:60px" onclick="sendMsg()">🚀</button>
+        <div style="display:flex; gap:10px; padding-top:10px;">
+            <input id="mIn" placeholder="Сообщение..." style="margin-bottom:0;">
+            <button class="btn" style="width:60px; border-radius:50%;" onclick="sendMsg()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 
     <div id="p-prof" class="page">
-        <div class="card" style="text-align:center">
-            <h2 id="uName">...</h2>
-            <div style="font-size:20px; font-weight:bold; color:#ffcc00">💰 <span id="uCoins">0</span> U-Coins</div>
+        <div class="card" style="text-align:center;">
+            <div style="width:80px; height:80px; background:var(--bg); border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:30px;">👤</div>
+            <h2 id="profName">Ученик</h2>
+            <div style="color:var(--main); font-weight:bold;"><i class="fa-solid fa-coins"></i> <span id="uCoins">0</span> U-Coins</div>
         </div>
-
-        <div class="card">
-            <b>📝 Личные заметки</b>
-            <textarea id="uNotes" oninput="saveNotes()" placeholder="Твои секреты..."></textarea>
-        </div>
-
-        <button class="btn" onclick="santa()">🎁 Тайный Друг</button>
-        <button class="btn" style="background:var(--gray); margin-top:10px" onclick="document.body.classList.toggle('dark')">🌗 Тема</button>
-        <button class="btn" style="background:#ff3b30; margin-top:10px" onclick="logout()">Выйти</button>
+        <button class="btn" style="background:#8e8e93;" onclick="logout()">Выйти</button>
     </div>
 
     <nav class="nav">
-        <div class="nav-item selected" id="n-web" onclick="go('p-web')">🏛️</div>
-        <div class="nav-item" id="n-social" onclick="go('p-social')">🌟</div>
-        <div class="nav-item" id="n-chat" onclick="go('p-chat')">💬</div>
-        <div class="nav-item" id="n-prof" onclick="go('p-prof')">👤</div>
+        <button class="nav-item selected" id="n-school" onclick="go('p-school')"><i class="fa-solid fa-house"></i><span>Школа</span></button>
+        <button class="nav-item" id="n-chat" onclick="go('p-chat')"><i class="fa-solid fa-comments"></i><span>Чат</span></button>
+        <button class="nav-item" id="n-prof" onclick="go('p-prof')"><i class="fa-solid fa-user"></i><span>Профиль</span></button>
     </nav>
 </div>
 
-<div id="loginView" style="padding:100px 20px; text-align:center">
-    <h1>Universe</h1>
-    <input id="uLogin" placeholder="Твое имя">
-    <button class="btn" onclick="login()">Войти</button>
-</div>
-
-<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); padding:30px; border-radius:30px; width:80%">
-        <h3 id="mTitle">Ввод</h3>
-        <input id="mVal">
-        <button class="btn" id="mSave">Сохранить</button>
-    </div>
-</div>
-
 <script>
-    // ТВОЙ FIREBASE
-    firebase.initializeApp({
-        apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc",
-        authDomain: "e-my-fam.firebaseapp.com",
-        projectId: "e-my-fam",
-        storageBucket: "e-my-fam.firebasestorage.app",
-        messagingSenderId: "538837431491",
-        appId: "1:538837431491:web:9cb1d4706b4d7e97679e76"
+// ДАННЫЕ УЧЕНИКОВ
+const preUsers = [
+    {login:"Умида", password:"Умида1", role:"student"}, {login:"Азия", password:"азия002", role:"student"},
+    {login:"Шахсанем", password:"шахсанем090", role:"student"}, {login:"Шахмир", password:"шахнепас", role:"student"},
+    {login:"Эмир", password:"эмир777", role:"student"}, {login:"Мирас", password:"мирас111", role:"student"},
+    {login:"Генжеваева_Дилнура", password:"дилнураN1", role:"student"}, {login:"Самая", password:"елдар444", role:"student"},
+    {login:"Шахло", password:"фурхат", role:"student"}, {login:"Дидар", password:"дид2022", role:"student"},
+    {login:"Айсара", password:"улугбек", role:"student"}, {login:"Берик", password:"серик", role:"student"},
+    {login:"Серик", password:"берик", role:"student"}, {login:"Мамутова_Дилнура", password:"дилнураN2", role:"student"},
+    {login:"Ерасыл", password:"аминсайта", role:"admin"}, {login:"Асад", password:"мурат", role:"student"},
+    {login:"Виктория", password:"констат", role:"student"}, {login:"Кошкарова_Дилнура", password:"дилнураN3", role:"student"},
+    {login:"Женис", password:"полат", role:"student"}, {login:"Барно", password:"Улугбек1112", role:"student"},
+    {login:"Рашит", password:"Самат", role:"student"}, {login:"Жасмина", password:"199112346", role:"student"},
+    {login:"Темирбаева_Жасмина", password:"жасминаN2", role:"student"}, {login:"Манас", password:"1995514519", role:"student"},
+    {login:"Асал", password:"1955767412", role:"student"}, {login:"Алина", password:"", role:"student"},
+    {login:"Эла", password:"ЖиЕнНаСбКвАкЯ", role:"student"}, {login:"Тумирис", password:"логика", role:"student"},
+    {login:"Асемай", password:"какой_пароль?", role:"student"}
+];
+
+// КОНФИГ FIREBASE
+const firebaseConfig = {
+    apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc",
+    authDomain: "e-my-fam.firebaseapp.com",
+    projectId: "e-my-fam",
+    storageBucket: "e-my-fam.firebasestorage.app",
+    messagingSenderId: "538837431491",
+    appId: "1:538837431491:web:9cb1d4706b4d7e97679e76"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let me = null;
+
+function auth() {
+    const l = document.getElementById('uL').value;
+    const p = document.getElementById('uP').value;
+    const user = preUsers.find(u => u.login === l && u.password === p);
+    
+    if(user) {
+        me = user;
+        startApp();
+    } else { alert("Ошибка входа!"); }
+}
+
+function startApp() {
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('mainView').style.display = 'block';
+    document.getElementById('uNameDisplay').innerText = me.login;
+    document.getElementById('profName').innerText = me.login;
+    
+    if(me.role === 'admin') document.getElementById('admin-news').style.display = 'block';
+
+    // Слушатель чата
+    db.collection("chat").orderBy("t", "asc").limitToLast(50).onSnapshot(s => {
+        const box = document.getElementById('chatBox');
+        box.innerHTML = "";
+        s.forEach(doc => {
+            const d = doc.data();
+            const isMe = d.u === me.login;
+            const time = new Date(d.t).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            box.innerHTML += `
+                <div class="msg ${isMe ? 'me' : 'him'}">
+                    <span class="msg-user" style="color:${isMe?'#075e54':'#34b7f1'}">${d.u}</span>
+                    ${d.m}
+                    <div class="msg-info">${time} ${me.role === 'admin' ? `<i class="fa-solid fa-trash" style="color:red" onclick="delMsg('${doc.id}')"></i>` : ''}</div>
+                </div>`;
+        });
+        box.scrollTop = box.scrollHeight;
     });
-    const db = firebase.firestore();
-    let me = null, editType = "";
-    const classList = ["Ерасыл", "Амир", "Мадина", "Дамир", "Саида", "Темур"];
 
-    function login() {
-        const n = document.getElementById('uLogin').value.trim();
-        if(n) { me = n; localStorage.setItem('u_name', n); start(); }
-    }
-
-    window.onload = () => { if(localStorage.getItem('u_name')) { me = localStorage.getItem('u_name'); start(); } };
-
-    function start() {
-        document.getElementById('loginView').style.display = 'none';
-        document.getElementById('mainView').style.display = 'block';
-        document.getElementById('uName').innerText = me;
-        document.getElementById('uNotes').value = localStorage.getItem('notes_'+me) || "";
-
-        // Монеты
-        db.collection("users").doc(me).onSnapshot(d => {
-            const coins = d.exists ? d.data().c : 0;
-            document.getElementById('uCoins').innerText = coins;
+    // Новости
+    db.collection("news").orderBy("t", "desc").onSnapshot(s => {
+        const nBox = document.getElementById('newsFeed');
+        nBox.innerHTML = "";
+        s.forEach(doc => {
+            nBox.innerHTML += `<div class="card" style="border-left: 4px solid var(--main)">
+                <b>${doc.data().text}</b>
+                ${me.role === 'admin' ? `<button class="btn btn-delete" onclick="delNews('${doc.id}')">Удалить</button>` : ''}
+            </div>`;
         });
+    });
+}
 
-        // Лента
-        db.collection("posts").orderBy("t","desc").onSnapshot(s => {
-            const f = document.getElementById('feed'); f.innerHTML = "";
-            s.forEach(d => { f.innerHTML += `<div class="card"><b>${d.data().u}</b><p>${d.data().m}</p></div>`; });
-        });
-
-        // Шпоры
-        db.collection("shpora").onSnapshot(s => {
-            const b = document.getElementById('shporaBox'); b.innerHTML = "";
-            s.forEach(d => { b.innerHTML += `<div style="margin-bottom:5px">📎 ${d.data().v}</div>`; });
-        });
-
-        // Чат
-        db.collection("chat").orderBy("t","asc").limitToLast(20).onSnapshot(s => {
-            const box = document.getElementById('chatBox'); box.innerHTML = "";
-            s.forEach(d => {
-                const isMe = d.data().u === me;
-                box.innerHTML += `<div style="text-align:${isMe?'right':'left'}"><div style="display:inline-block; padding:10px; border-radius:15px; background:${isMe?'var(--main)':'#eee'}; color:${isMe?'white':'black'}; margin:2px;">${d.data().m}</div></div>`;
-            });
-            box.scrollTop = box.scrollHeight;
-        });
-        
-        // Вайб
-        db.collection("config").doc("vibe").onSnapshot(d => {
-            const v = d.exists ? d.data().v : 50;
-            document.getElementById('vibeVal').innerText = v;
-            document.getElementById('vibeFill').style.width = v + "%";
-        });
+function sendMsg() {
+    const m = document.getElementById('mIn').value;
+    if(m) {
+        db.collection("chat").add({ u: me.login, m: m, t: Date.now() });
+        document.getElementById('mIn').value = "";
     }
+}
 
-    function toggleMode() {
-        document.body.classList.toggle('social-mode');
-        const isSoc = document.body.classList.contains('social-mode');
-        document.getElementById('mLabel').innerText = isSoc ? "❤️ Режим: Соцсеть" : "🏛️ Режим: Школа";
-        go(isSoc ? 'p-social' : 'p-web');
-    }
+function go(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('selected'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('n-' + id.split('-')[1]).classList.add('selected');
+}
 
-    function go(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('selected'));
-        document.getElementById(id).classList.add('active');
-        document.getElementById('n-' + id.split('-')[1]).classList.add('selected');
-    }
-
-    function sendMsg() {
-        const i = document.getElementById('mIn'); if(!i.value) return;
-        db.collection("chat").add({u:me, m:i.value, t:Date.now()});
-        if(i.value.startsWith("!шар")) {
-            const a = ["Да", "Нет", "Возможно", "100%", "Никогда"];
-            setTimeout(() => db.collection("chat").add({u:"🤖 Бот", m: "🔮 " + a[Math.floor(Math.random()*a.length)], t:Date.now()+1}), 500);
-        }
-        i.value = "";
-    }
-
-    function roll() {
-        const name = classList[Math.floor(Math.random()*classList.length)];
-        document.getElementById('rollRes').innerText = name + "!";
-        confetti();
-    }
-
-    function setVibe(up) {
-        const ref = db.collection("config").doc("vibe");
-        db.runTransaction(async (t) => {
-            const d = await t.get(ref);
-            let nv = (d.data().v || 50) + (up ? 1 : -1);
-            t.update(ref, {v: Math.max(0, Math.min(100, nv))});
-        });
-    }
-
-    function ask(t) { editType = t; document.getElementById('modal').style.display='flex'; }
-    document.getElementById('mSave').onclick = () => {
-        const v = document.getElementById('mVal').value;
-        if(editType === 'post') db.collection("posts").add({u:me, m:v, t:Date.now()});
-        if(editType === 'shpora') db.collection("shpora").add({v:v});
-        document.getElementById('modal').style.display='none';
-    };
-
-    function saveNotes() { localStorage.setItem('notes_'+me, document.getElementById('uNotes').value); }
-    function santa() { alert("Сегодня твой секретный друг: " + classList[Math.floor(Math.random()*classList.length)]); }
-    function logout() { localStorage.clear(); location.reload(); }
+// АДМИН ФУНКЦИИ
+function delMsg(id) { if(confirm("Удалить сообщение?")) db.collection("chat").doc(id).delete(); }
+function addNews() {
+    const txt = prompt("Введите текст новости:");
+    if(txt) db.collection("news").add({ text: txt, t: Date.now() });
+}
+function delNews(id) { db.collection("news").doc(id).delete(); }
+function logout() { location.reload(); }
 </script>
 </body>
 </html>
