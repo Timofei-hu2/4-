@@ -3,74 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>School Universe</title>
+    <title>School Universe One</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --main: #007aff; --social: #5856d6; --bg: #f2f2f7; --white: #ffffff; --text: #000000; --gray: #8e8e93; --gold: #ffcc00; }
-        body.dark { --bg: #000000; --white: #1c1c1e; --text: #ffffff; }
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 75px; transition: 0.3s; }
-        .page { display: none; padding: 15px; }
+        :root { --main: #007aff; --social: #5856d6; --bg: #f2f2f7; --white: #ffffff; --text: #000000; --gray: #8e8e93; --card: #ffffff; }
+        body.dark { --bg: #000000; --white: #1c1c1e; --text: #ffffff; --card: #1c1c1e; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 70px; transition: 0.3s; }
+        
+        /* Навигация и страницы */
+        .page { display: none; padding: 15px; animation: fadeIn 0.3s; }
         .active { display: block; }
-        .card { background: var(--white); padding: 15px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
-        .btn { background: var(--main); color: white; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-        .now-badge { background: #34c759; color: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; text-align: center; }
-        .like-btn { background: none; border: 1px solid #ddd; padding: 6px 12px; border-radius: 20px; color: #ff2d55; cursor: pointer; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         .nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: var(--white); display: flex; border-top: 1px solid #ddd; z-index: 100; }
         .nav-item { flex: 1; border: none; background: none; color: var(--gray); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; }
-        .nav-item.selected { color: var(--main); }
-        .badge { background: var(--gold); color: black; padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; margin-bottom: 10px; background: var(--white); color: var(--text); }
-        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center; }
-        .link-btn { display: inline-block; padding: 8px 12px; background: #eee; border-radius: 8px; text-decoration: none; color: #333; font-size: 13px; margin-right: 5px; }
+        .nav-item.selected { color: var(--main); font-weight: bold; }
+
+        /* Элементы интерфейса */
+        .card { background: var(--card); padding: 15px; border-radius: 18px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
+        .btn { background: var(--main); color: white; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        
+        .now-badge { background: #34c759; color: white; padding: 12px; border-radius: 12px; text-align: center; font-weight: bold; margin-bottom: 15px; }
+        
+        /* Соцсеть элементы */
+        .post-user { color: var(--social); font-weight: bold; margin-bottom: 5px; display: block; }
+        .post-img { width: 100%; border-radius: 12px; margin: 10px 0; display: none; }
+        .like-btn { background: none; border: 1px solid #ddd; padding: 6px 15px; border-radius: 20px; color: #ff2d55; cursor: pointer; margin-top: 10px; }
+        
+        .comments-box { background: rgba(0,0,0,0.03); border-radius: 12px; padding: 10px; margin-top: 10px; font-size: 13px; }
+        body.dark .comments-box { background: rgba(255,255,255,0.05); }
+        
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; margin-bottom: 10px; background: var(--white); color: var(--text); font-size: 16px; }
+        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:200; align-items:center; justify-content:center; backdrop-filter: blur(5px); }
     </style>
 </head>
 <body>
 
 <div id="loginView" style="text-align: center; padding: 80px 20px;">
-    <h1 style="color:var(--main)">School Universe</h1>
-    <input id="uL" placeholder="Имя">
+    <h1 style="color:var(--main); font-size: 32px; margin-bottom: 5px;">School Universe</h1>
+    <p style="color:var(--gray); margin-bottom: 30px;">Вход для учеников</p>
+    <input id="uL" placeholder="Твоё имя">
     <input id="uP" type="password" placeholder="Пароль">
-    <button class="btn" onclick="doLogin()">Войти</button>
+    <button class="btn" onclick="doLogin()">Войти в систему</button>
 </div>
 
 <div id="mainView" style="display:none;">
+    
     <div id="p-school" class="page active">
-        <div id="nowStatus" class="now-badge">Загрузка статуса...</div>
-        <div id="adm-status" style="display:none;"><button class="btn" style="background:#34c759" onclick="ask('now')">⚡ Изменить текущее событие</button></div>
+        <div id="nowStatus" class="now-badge">Загрузка события...</div>
+        <div id="adm-status" style="display:none;"><button class="btn" style="background:#34c759" onclick="ask('now')">⚡ Изменить статус (Админ/Староста)</button></div>
         
-        <div class="card" style="background: #fff9c4; border: 1px solid #fbc02d;">
-            <b>🎂 Сегодня день рождения:</b>
-            <div id="bdayBox" style="margin-top:5px;">Пока нет данных</div>
+        <div class="card" style="background: #fff9c4; border: 1px solid #fbc02d; color: #000;">
+            <b>🎂 Именинники сегодня:</b>
+            <div id="bdayBox" style="margin-top:5px;">Загрузка...</div>
         </div>
 
-        <h2 style="color:var(--main)">🏫 Учёба</h2>
+        <h3>📅 Расписание</h3>
         <div class="card">
-            <h3>📅 Расписание</h3>
             <div id="scheduleBox" style="white-space:pre-wrap">...</div>
-            <div id="adm-t" style="display:none;"><button class="btn" style="margin-top:10px" onclick="ask('time')">Изменить</button></div>
+            <div id="adm-t" style="display:none;"><button class="btn" style="margin-top:10px" onclick="ask('time')">Редактировать</button></div>
         </div>
 
-        <h3>📚 Домашнее задание</h3>
+        <h3>📝 Домашнее задание</h3>
         <div id="adm-h" style="display:none;"><button class="btn" onclick="ask('hw')">Добавить ДЗ</button></div>
         <div id="hwList"></div>
-
-        <div class="card">
-            <b>🔗 Полезные ссылки:</b><br><br>
-            <a href="https://kundelik.kz" class="link-btn" target="_blank">Kundelik</a>
-            <a href="https://gdz.ru" class="link-btn" target="_blank">ГДЗ</a>
-        </div>
     </div>
 
     <div id="p-social" class="page">
-        <h2 style="color:var(--social)">🌟 Лента</h2>
-        <button class="btn" style="background:var(--social)" onclick="ask('post')">📸 Поделиться новостью</button>
+        <h2 style="color:var(--social)">🌟 Лента событий</h2>
+        <button class="btn" style="background:var(--social)" onclick="ask('post')">📸 Создать новый пост</button>
         <div id="postList"></div>
     </div>
 
     <div id="p-chat" class="page">
-        <h2>💬 Чат класса</h2>
-        <div id="chatBox" style="height:calc(100vh - 220px); overflow-y:auto; margin-bottom:10px;"></div>
+        <h2>💬 Общий чат</h2>
+        <div id="chatBox" style="height:calc(100vh - 220px); overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column;"></div>
         <div style="display:flex; gap:8px;">
             <input id="mIn" placeholder="Сообщение..." style="margin:0">
             <button class="btn" onclick="send()" style="width:70px; margin:0">🚀</button>
@@ -78,15 +87,17 @@
     </div>
 
     <div id="p-prof" class="page" style="text-align:center;">
-        <img id="myAva" src="" style="width:110px; height:110px; border-radius:50%; object-fit:cover; border:3px solid var(--main); margin-top:20px;">
-        <h2 id="myName">...</h2>
-        <div id="myRank" class="badge">Новичок</div>
-        <p id="myStatus" style="color:var(--gray); margin: 10px 0;">...</p>
+        <img id="myAva" src="" style="width:120px; height:120px; border-radius:50%; object-fit:cover; border:4px solid var(--main); margin-top:20px;">
+        <h2 id="myName" style="margin-bottom:5px;">...</h2>
+        <div id="myRank" style="display:inline-block; background:#ffcc00; color:#000; padding:4px 12px; border-radius:8px; font-weight:bold; font-size:14px;">Ранг...</div>
+        <p id="myStatus" style="color:var(--gray); margin: 15px 0;">...</p>
         
-        <button class="btn" style="background:var(--gray)" onclick="ask('ava')">Сменить фото</button>
-        <button class="btn" style="background:var(--gray)" onclick="ask('status')">Изменить статус</button>
-        <button class="btn" style="background:#5856d6" onclick="document.body.classList.toggle('dark')">🌙 Тема</button>
-        <button class="btn" style="background:#ff3b30" onclick="doLogout()">🚪 Выйти</button>
+        <div class="card">
+            <button class="btn" style="background:var(--gray)" onclick="ask('ava')">Сменить фото (ссылка)</button>
+            <button class="btn" style="background:var(--gray)" onclick="ask('status')">Обновить статус</button>
+            <button class="btn" style="background:var(--social)" onclick="document.body.classList.toggle('dark')">🌙 Переключить тему</button>
+            <button class="btn" style="background:#ff3b30; margin-top:15px;" onclick="doLogout()">🚪 Выйти</button>
+        </div>
     </div>
 
     <nav class="nav">
@@ -97,22 +108,20 @@
     </nav>
 </div>
 
-<div id="modal"><div style="background:var(--white); padding:20px; border-radius:20px; width:85%;">
+<div id="modal"><div style="background:var(--white); padding:20px; border-radius:24px; width:85%; max-width:400px;">
     <h3 id="mTitle" style="margin-top:0"></h3>
     <textarea id="mVal"></textarea>
+    <input type="text" id="mImg" placeholder="Ссылка на фото (если нужно)" style="display:none">
     <button class="btn" id="mSave">Сохранить</button>
-    <button class="btn" style="background:#eee; color:black" onclick="document.getElementById('modal').style.display='none'">Отмена</button>
+    <button class="btn" style="background:none; color:var(--gray)" onclick="document.getElementById('modal').style.display='none'">Отмена</button>
 </div></div>
 
 <script>
     const users = [
         {login:"Ерасыл", password:"аминсайта", role:"admin"},
-        {login:"СТАРОСТА", password:"пароль123", role:"monitor"}, // ЗАМЕНИ "СТАРОСТА" НА РЕАЛЬНОЕ ИМЯ
+        {login:"СТАРОСТА", password:"пароль123", role:"monitor"}, // ЗАМЕНИТЬ НА РЕАЛЬНОГО ЧЕЛОВЕКА
         {login:"Умида", password:"Умида1"}, {login:"Азия", password:"азия002"},
-        {login:"Шахсанем", password:"шахсанем090"}, {login:"Шахмир", password:"шахнепас"},
-        {login:"Эмир", password:"эмир777"}, {login:"Мирас", password:"мирас111"},
         {login:"Алина", password:"202564"}
-        // Остальные пользователи...
     ];
 
     firebase.initializeApp({
@@ -127,7 +136,7 @@
     let me = null, mode = "";
 
     window.onload = () => {
-        const s = localStorage.getItem('school_user_v4');
+        const s = localStorage.getItem('school_one_v1');
         if(s) { me = JSON.parse(s); startApp(); }
     };
 
@@ -135,76 +144,95 @@
         const u = document.getElementById('uL').value.trim();
         const p = document.getElementById('uP').value.trim();
         const f = users.find(x => x.login === u && x.password === p);
-        if(f) { me = f; localStorage.setItem('school_user_v4', JSON.stringify(f)); startApp(); }
-        else alert("Ошибка!");
+        if(f) { me = f; localStorage.setItem('school_one_v1', JSON.stringify(f)); startApp(); }
+        else alert("Ошибка входа!");
     }
 
-    function doLogout() { localStorage.removeItem('school_user_v4'); location.reload(); }
+    function doLogout() { localStorage.removeItem('school_one_v1'); location.reload(); }
 
     function startApp() {
         document.getElementById('loginView').style.display = "none";
         document.getElementById('mainView').style.display = "block";
         document.getElementById('myName').innerText = me.login;
         
-        // Проверка прав (Админ или Староста)
-        const isVip = (me.role === 'admin' || me.role === 'monitor');
-        if(isVip) {
+        if(me.role === 'admin' || me.role === 'monitor') {
             document.getElementById('adm-h').style.display = "block";
             document.getElementById('adm-t').style.display = "block";
             document.getElementById('adm-status').style.display = "block";
         }
 
-        // 1. Текущее событие
-        db.collection("info").doc("now").onSnapshot(d => {
-            document.getElementById('nowStatus').innerText = d.exists ? d.data().m : "Уроки еще не начались";
-        });
+        // ШКОЛА: Статус и Днюхи
+        db.collection("info").doc("now").onSnapshot(d => { document.getElementById('nowStatus').innerText = d.exists ? d.data().m : "Уроков нет"; });
+        db.collection("info").doc("bdays").onSnapshot(d => { document.getElementById('bdayBox').innerText = d.exists ? d.data().list : "Сегодня праздников нет"; });
+        db.collection("info").doc("main").onSnapshot(d => { if(d.exists) document.getElementById('scheduleBox').innerText = d.data().d; });
 
-        // 2. Дни рождения
-        db.collection("info").doc("bdays").onSnapshot(d => {
-            document.getElementById('bdayBox').innerText = d.exists ? d.data().list : "Сегодня именинников нет";
-        });
-
-        // 3. Соцсеть и Ранг
+        // СОЦСЕТЬ: Лента с комментами
         db.collection("posts").orderBy("t","desc").onSnapshot(s => {
             const list = document.getElementById('postList'); list.innerHTML = "";
             let myLikes = 0;
-            s.forEach(d => {
-                const data = d.data();
-                if(data.u === me.login) myLikes += (data.l || 0);
-                list.innerHTML += `<div class="card"><span class="post-user">@${data.u}</span><p>${data.m}</p>
-                <button class="like-btn" onclick="db.collection('posts').doc('${d.id}').update({l:${(data.l||0)+1}})">❤️ ${data.l||0}</button></div>`;
+            s.forEach(doc => {
+                const d = doc.data(); const pid = doc.id;
+                if(d.u === me.login) myLikes += (d.l || 0);
+                const img = d.img ? `<img src="${d.img}" class="post-img" style="display:block">` : "";
+                
+                list.innerHTML += `<div class="card">
+                    <span class="post-user">@${d.u}</span>
+                    <p>${d.m}</p>${img}
+                    <button class="like-btn" onclick="db.collection('posts').doc('${pid}').update({l:${(d.l||0)+1}})">❤️ ${d.l||0}</button>
+                    <div class="comments-box" id="cbox-${pid}">Загрузка комментов...</div>
+                    <div style="display:flex; gap:5px; margin-top:8px;">
+                        <input id="cin-${pid}" placeholder="Ответить..." style="margin:0; padding:8px; font-size:13px;">
+                        <button class="btn" style="width:50px; margin:0; padding:5px;" onclick="addComment('${pid}')">📤</button>
+                    </div>
+                </div>`;
+                loadComments(pid);
             });
             updateRank(myLikes);
         });
 
-        // ДЗ, Чат и остальное
-        db.collection("hw").orderBy("t","desc").onSnapshot(s => {
-            const list = document.getElementById('hwList'); list.innerHTML = "";
-            s.forEach(d => { list.innerHTML += `<div class="card" style="border-left:4px solid var(--main)"><b>${d.data().u}:</b><br>${d.data().m}</div>`; });
-        });
-
+        // ЧАТ
         db.collection("chat").orderBy("t","asc").onSnapshot(s => {
             const box = document.getElementById('chatBox'); box.innerHTML = "";
             s.forEach(d => {
                 const data = d.data(); const isMe = data.u === me.login;
-                box.innerHTML += `<div style="text-align:${isMe?'right':'left'}; margin-bottom:10px;"><div style="display:inline-block; padding:10px; border-radius:15px; background:${isMe?'var(--main)':'var(--white)'}; color:${isMe?'white':'black'}; border:1px solid #ddd"><small>${data.u}</small><br>${data.m}</div></div>`;
+                box.innerHTML += `<div style="text-align:${isMe?'right':'left'}; margin-bottom:10px;"><div style="display:inline-block; padding:10px; border-radius:15px; background:${isMe?'var(--main)':'var(--white)'}; color:${isMe?'white':(document.body.classList.contains('dark')?'white':'black')}; border:1px solid #ddd; max-width:80%"><small style="opacity:0.7">${data.u}</small><br>${data.m}</div></div>`;
             });
             box.scrollTop = box.scrollHeight;
         });
 
-        db.collection("info").doc("main").onSnapshot(d => { if(d.exists) document.getElementById('scheduleBox').innerText = d.data().d; });
+        // ДЗ
+        db.collection("hw").orderBy("t","desc").onSnapshot(s => {
+            const list = document.getElementById('hwList'); list.innerHTML = "";
+            s.forEach(d => { list.innerHTML += `<div class="card" style="border-left:5px solid var(--main)"><b>${d.data().u}:</b><br>${d.data().m}</div>`; });
+        });
+
+        // ПРОФИЛЬ
         db.collection("users").doc(me.login).onSnapshot(d => { 
             if(d.exists) { 
                 document.getElementById('myAva').src = d.data().a || "https://cdn-icons-png.flaticon.com/512/149/149071.png"; 
-                document.getElementById('myStatus').innerText = d.data().s || "Нет статуса";
+                document.getElementById('myStatus').innerText = d.data().s || "Тут будет твой статус";
             } 
         });
     }
 
+    function loadComments(pid) {
+        db.collection("posts").doc(pid).collection("comments").orderBy("t","asc").onSnapshot(s => {
+            const box = document.getElementById(`cbox-${pid}`); box.innerHTML = "";
+            if(s.empty) box.innerHTML = "Пока нет комментариев";
+            s.forEach(c => { box.innerHTML += `<div><b>${c.data().u}:</b> ${c.data().m}</div>`; });
+        });
+    }
+
+    function addComment(pid) {
+        const val = document.getElementById(`cin-${pid}`).value.trim();
+        if(val) db.collection("posts").doc(pid).collection("comments").add({u:me.login, m:val, t:Date.now()});
+        document.getElementById(`cin-${pid}`).value = "";
+    }
+
     function updateRank(likes) {
         let r = "Новичок 👶";
-        if(likes > 10) r = "Звезда класса 🌟";
-        if(likes > 50) r = "Легенда школы 👑";
+        if(likes > 10) r = "Звезда 🌟";
+        if(likes > 50) r = "Легенда 👑";
         document.getElementById('myRank').innerText = r;
     }
 
@@ -217,13 +245,16 @@
 
     function ask(m) {
         mode = m; 
-        document.getElementById('mTitle').innerText = "Введите данные"; 
+        document.getElementById('mTitle').innerText = "Введите текст"; 
         document.getElementById('mVal').value = ""; 
+        document.getElementById('mImg').style.display = (m === 'post') ? "block" : "none";
         document.getElementById('modal').style.display = "flex";
         document.getElementById('mSave').onclick = () => {
-            const v = document.getElementById('mVal').value.trim(); if(!v) return;
+            const v = document.getElementById('mVal').value.trim();
+            const img = document.getElementById('mImg').value.trim();
+            if(!v) return;
             if(mode==='now') db.collection("info").doc("now").set({m:v});
-            if(mode==='post') db.collection("posts").add({m:v, u:me.login, t:Date.now(), l:0});
+            if(mode==='post') db.collection("posts").add({m:v, u:me.login, t:Date.now(), l:0, img:img});
             if(mode==='hw') db.collection("hw").add({m:v, u:me.login, t:Date.now()});
             if(mode==='ava') db.collection("users").doc(me.login).set({a:v}, {merge:true});
             if(mode==='status') db.collection("users").doc(me.login).set({s:v}, {merge:true});
