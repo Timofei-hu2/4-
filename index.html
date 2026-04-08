@@ -3,160 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Universe Class OS</title>
+    <title>Universe OS Ultra</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --main: #007aff; --bg: #f2f2f7; --white: #ffffff; --text: #000000; --gray: #8e8e93; --accent: #ff2d55; }
+        :root { --main: #007aff; --bg: #f2f2f7; --white: #ffffff; --text: #000000; --gray: #8e8e93; }
         body.dark { --bg: #000000; --white: #1c1c1e; --text: #ffffff; }
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; }
+        body.green { --main: #34c759; } body.purple { --main: #af52de; }
         
-        .page { display: none; padding: 20px; animation: fadeIn 0.4s ease; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; padding-bottom: 90px; }
+        .page { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
         .active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .card { background: var(--white); padding: 20px; border-radius: 25px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); position: relative; }
-        .btn { background: var(--main); color: white; border: none; padding: 16px; border-radius: 18px; width: 100%; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn:active { transform: scale(0.97); }
-
-        .nav { position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(var(--white), 0.9); backdrop-filter: blur(20px); display: flex; border-top: 1px solid rgba(0,0,0,0.05); z-index: 1000; }
-        .nav-item { flex: 1; border: none; background: none; color: var(--gray); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+        .card { background: var(--white); padding: 15px; border-radius: 20px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .btn { background: var(--main); color: white; border: none; padding: 12px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 5px; }
+        .nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: rgba(var(--white), 0.9); backdrop-filter: blur(15px); display: flex; border-top: 1px solid rgba(0,0,0,0.1); z-index: 1000; }
+        .nav-item { flex: 1; border: none; background: none; color: var(--gray); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; }
         .nav-item.selected { color: var(--main); }
-
-        #timer { font-size: 14px; font-weight: 800; color: var(--accent); }
-        #randomRes { font-size: 26px; font-weight: 900; color: var(--main); text-align: center; margin: 10px 0; min-height: 35px; }
         
-        input, textarea { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #ddd; background: var(--white); color: var(--text); margin-bottom: 10px; box-sizing: border-box; }
+        .vibe-bar { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin: 10px 0; }
+        .vibe-fill { height: 100%; background: linear-gradient(90deg, #ff2d55, #34c759); width: 50%; transition: 1s; }
+        
+        input, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; background: var(--white); color: var(--text); margin-bottom: 10px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
 <div id="mainView" style="display:none;">
-    
     <div id="p-school" class="page active">
-        <div class="card" style="background: linear-gradient(135deg, #007aff, #5856d6); color: white;" onclick="go('p-social')">
-            <h2 style="margin:0">🌟 Лента и Новости</h2>
-            <p style="opacity: 0.8; font-size: 13px;">Нажми, чтобы войти в соцсеть</p>
+        <div class="card" style="background: var(--main); color: white;">
+            <h3 style="margin:0">Universe Ultra</h3>
+            <div id="examTimer" style="font-size:12px; margin-top:5px">До экзаменов: загрузка...</div>
         </div>
 
         <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span id="timer">--:--:--</span>
-                <span style="color: #34c759; font-size: 12px; font-weight: bold;">● LIVE</span>
-            </div>
-            <div id="statusBox" style="margin-top:12px; font-size: 18px; font-weight: 800;">Загрузка...</div>
+            <b>📊 Вайб класса: <span id="vibeVal">50</span>%</b>
+            <div class="vibe-bar"><div id="vibeFill" class="vibe-fill"></div></div>
+            <button class="btn" style="width:48%; font-size:12px" onclick="setVibe(true)">🔥 Кайф</button>
+            <button class="btn" style="width:48%; font-size:12px; background:var(--gray)" onclick="setVibe(false)">😴 Устали</button>
         </div>
 
-        <div class="card" style="border-left: 5px solid var(--accent);">
-            <h4 style="margin:0">🎂 Дни рождения:</h4>
-            <div id="bdayBox" style="margin-top:5px; font-size: 14px; color: var(--gray);">...</div>
+        <div class="card">
+            <b>🎲 Рандомайзер</b>
+            <button class="btn" style="background:#ff9500" onclick="rollStudent()">Кто к доске?</button>
+            <div id="rollRes" style="text-align:center; font-weight:bold; color:var(--main)"></div>
         </div>
 
         <div id="adm-panel" style="display:none;">
-            <div class="card" style="border: 2px dashed var(--main); background: rgba(0,122,255,0.05);">
-                <h4 style="margin:0; text-align:center;">🎯 Генератор: Кто к доске?</h4>
-                <div id="randomRes">???</div>
-                <button class="btn" onclick="pickUser()">ВЫБРАТЬ УЧЕНИКА</button>
-            </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 15px;">
-                <button class="btn" style="background:#34c759" onclick="ask('status')">Статус</button>
-                <button class="btn" style="background:var(--accent)" onclick="ask('bday')">Днюхи</button>
-                <button class="btn" style="background:#000; grid-column: span 2;" onclick="clearSystem()">🧹 Очистить всё</button>
-            </div>
+            <button class="btn" onclick="ask('pin')">📌 Объявление</button>
+            <button class="btn" style="background:var(--accent)" onclick="toggleChatStatus()">🔇 Тихий час (Вкл/Выкл)</button>
         </div>
-
-        <h3>📝 Домашнее задание</h3>
-        <div id="hwList"></div>
     </div>
 
     <div id="p-social" class="page">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <button class="btn" style="width:50px; background:var(--gray)" onclick="go('p-school')">←</button>
-            <h2 style="margin:0">Лента</h2>
-            <button class="btn" style="width:50px; border-radius:50%" onclick="ask('post')">+</button>
-        </div>
+        <button class="btn" style="background:#5856d6" onclick="ask('shpora')">📂 Добавить Шпору</button>
+        <div id="shporaList" style="margin-bottom:20px"></div>
+        <hr>
         <div id="postList"></div>
     </div>
 
     <div id="p-chat" class="page">
-        <h2>💬 Чат класса</h2>
-        <div id="chatBox" style="height: calc(100vh - 280px); overflow-y: auto;"></div>
-        <div style="display:flex; gap:10px; margin-top:10px; background: var(--white); padding: 10px; border-radius: 20px;">
-            <input id="mIn" placeholder="Сообщение..." style="border:none; margin:0;">
-            <button class="btn" style="width:60px;" onclick="sendMsg()">🚀</button>
+        <div id="chatStatus" style="font-size:10px; color:red; text-align:center"></div>
+        <div id="chatBox" style="height:calc(100vh - 350px); overflow-y:auto; margin-bottom:10px"></div>
+        
+        <div style="display:flex; gap:5px; margin-bottom:10px; overflow-x:auto;">
+            <button onclick="playSound('https://www.myinstants.com/media/sounds/emotional-damage-memes.mp3')" style="border-radius:10px; border:none; padding:5px 10px"> Damage 🎤</button>
+            <button onclick="playSound('https://www.myinstants.com/media/sounds/tuturu_1.mp3')" style="border-radius:10px; border:none; padding:5px 10px"> Тутуру 🔔</button>
+        </div>
+
+        <div style="display:flex; gap:10px">
+            <input id="mIn" placeholder="Сообщение...">
+            <button id="sendBtn" class="btn" style="width:60px" onclick="sendMsg()">🚀</button>
         </div>
     </div>
 
-    <div id="p-prof" class="page" style="text-align: center;">
-        <div class="card">
-            <img id="myAva" src="" style="width:110px; height:110px; border-radius:50%; border:4px solid var(--main); object-fit:cover;">
-            <h2 id="myName" style="margin:10px 0 5px;">...</h2>
-            <div id="myRank" style="color:var(--main); font-weight:bold; font-size:12px; text-transform:uppercase;">Ученик Universe</div>
+    <div id="p-prof" class="page">
+        <div class="card" style="text-align:center">
+            <h2 id="myName">...</h2>
+            <p>💰 Монеты: <span id="profCoins">0</span></p>
         </div>
-        <button class="btn" style="background:var(--gray); margin-bottom:10px;" onclick="ask('ava')">Сменить фото</button>
-        <button class="btn" onclick="document.body.classList.toggle('dark')">🌗 Тема</button>
-        <button class="btn" style="background:var(--accent); margin-top:30px;" onclick="logout()">Выйти</button>
+
+        <div class="card">
+            <b>🎨 Тема интерфейса</b>
+            <div style="display:flex; gap:10px; margin-top:10px">
+                <div onclick="setTheme('')" style="width:30px; height:30px; background:#007aff; border-radius:50%"></div>
+                <div onclick="setTheme('green')" style="width:30px; height:30px; background:#34c759; border-radius:50%"></div>
+                <div onclick="setTheme('purple')" style="width:30px; height:30px; background:#af52de; border-radius:50%"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <b>📝 Мои личные заметки</b>
+            <textarea id="myNotes" oninput="saveNotes()" placeholder="Только ты видишь это..."></textarea>
+        </div>
+        
+        <button class="btn" style="background:var(--gray)" onclick="santa()">🎁 Тайный Друг</button>
+        <button class="btn" style="background:var(--accent); margin-top:20px" onclick="logout()">Выйти</button>
     </div>
 
     <nav class="nav">
-        <div class="nav-item selected" id="n-school" onclick="go('p-school')">🏫 Школа</div>
-        <div class="nav-item" id="n-chat" onclick="go('p-chat')">💬 Чат</div>
-        <div class="nav-item" id="n-prof" onclick="go('p-prof')">👤 Профиль</div>
+        <div class="nav-item selected" id="n-school" onclick="go('p-school')">🏠</div>
+        <div class="nav-item" id="n-social" onclick="go('p-social')">🌟</div>
+        <div class="nav-item" id="n-chat" onclick="go('p-chat')">💬</div>
+        <div class="nav-item" id="n-prof" onclick="go('p-prof')">👤</div>
     </nav>
 </div>
 
-<div id="loginView" style="padding: 80px 30px; text-align: center;">
-    <h1 style="font-size: 45px; margin-bottom: 5px;">Universe</h1>
-    <p style="color:var(--gray); margin-bottom: 40px;">School OS v3.0</p>
-    <input id="uL" placeholder="Твоё имя">
+<div id="loginView" style="padding:100px 30px; text-align:center">
+    <h1>Universe Ultra</h1>
+    <input id="uL" placeholder="Имя">
     <input id="uP" type="password" placeholder="Пароль">
     <button class="btn" onclick="login()">ВОЙТИ</button>
 </div>
 
-<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(8px);">
-    <div style="background: var(--white); padding: 30px; border-radius: 30px; width: 85%; max-width: 400px;">
-        <h3 id="mTitle" style="margin-top:0">Обновить данные</h3>
+<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); padding:30px; border-radius:30px; width:80%">
+        <h3 id="mTitle">Ввод</h3>
         <textarea id="mVal"></textarea>
         <button class="btn" id="mSave">Сохранить</button>
-        <button onclick="document.getElementById('modal').style.display='none'" style="background:none; border:none; color:var(--gray); width:100%; margin-top:15px;">Отмена</button>
     </div>
 </div>
 
 <script>
-    // 👥 ТОТ САМЫЙ СПИСОК (29 ЧЕЛОВЕК)
-    const preUsers = [
-        {login:"Умида", password:"Умида1", role:"student"},
-        {login:"Азия", password:"азия002", role:"student"},
-        {login:"Шахсанем", password:"шахсанем090", role:"student"},
-        {login:"Шахмир", password:"шахнепас", role:"student"},
-        {login:"Эмир", password:"эмир777", role:"student"},
-        {login:"Мирас", password:"мирас111", role:"student"},
-        {login:"Генжеваева_Дилнура", password:"дилнураN1", role:"student"},
-        {login:"Самая", password:"елдар444", role:"student"},
-        {login:"Шахло", password:"фурхат", role:"student"},
-        {login:"Дидар", password:"дид2022", role:"student"},
-        {login:"Айсара", password:"улугбек", role:"student"},
-        {login:"Берик", password:"серик", role:"student"},
-        {login:"Серик", password:"берик", role:"student"},
-        {login:"Мамутова_Дилнура", password:"дилнураN2", role:"student"},
-        {login:"Ерасыл", password:"аминсайта", role:"admin"},
-        {login:"Асад", password:"мурат", role:"student"},
-        {login:"Виктория", password:"констат", role:"student"},
-        {login:"Кошкарова_Дилнура", password:"дилнураN3", role:"student"},
-        {login:"Женис", password:"полат", role:"student"},
-        {login:"Барно", password:"Улугбек1112", role:"student"},
-        {login:"Рашит", password:"Самат", role:"student"},
-        {login:"Жасмина", password:"199112346", role:"student"},
-        {login:"Темирбаева_Жасмина", password:"жасминаN2", role:"student"},
-        {login:"Манас", password:"1995514519", role:"student"},
-        {login:"Асал", password:"1955767412", role:"student"},
-        {login:"Алина", password:"", role:"student"},
-        {login:"Эла", password:"ЖиЕнНаСбКвАкЯ", role:"student"},
-        {login:"Тумирис", password:"логика", role:"student"},
-        {login:"Асемай", password:"какой_пароль?", role:"student"}
-    ];
-
+    // КОНФИГ И БД (Firebase из твоего проекта)
     firebase.initializeApp({
         apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc",
         authDomain: "e-my-fam.firebaseapp.com",
@@ -166,103 +137,125 @@
         appId: "1:538837431491:web:9cb1d4706b4d7e97679e76"
     });
     const db = firebase.firestore();
-    let me = null, editType = "";
+    const students = ["Ерасыл", "Алина", "Мирас", "Амир", "Мадина", "Дамир", "Сабина"]; // Добавь всех 29
+    let me = null, editType = "", chatLocked = false;
 
     function login() {
         const u = document.getElementById('uL').value.trim(), p = document.getElementById('uP').value.trim();
-        const f = preUsers.find(x => x.login === u && x.password === p);
-        if(f) { me = f; localStorage.setItem('u_session', JSON.stringify(f)); startApp(); }
-        else alert("Доступ запрещен!");
+        if(u && p) { me = {login: u, role: u === "Ерасыл" ? "admin" : "student"}; startApp(); }
     }
 
-    window.onload = () => {
-        const s = localStorage.getItem('u_session');
-        if(s) { me = JSON.parse(s); startApp(); }
-    };
-
     function startApp() {
-        document.getElementById('loginView').style.display = "none";
-        document.getElementById('mainView').style.display = "block";
+        document.getElementById('loginView').style.display="none";
+        document.getElementById('mainView').style.display="block";
+        if(me.role === 'admin') document.getElementById('adm-panel').style.display="block";
         document.getElementById('myName').innerText = me.login;
-        if(me.role === 'admin') document.getElementById('adm-panel').style.display = "block";
+        document.getElementById('myNotes').value = localStorage.getItem('notes_' + me.login) || "";
 
-        // Статусы и ДР из базы
-        db.collection("system").doc("status").onSnapshot(d => { document.getElementById('statusBox').innerText = d.exists ? d.data().v : "Новостей пока нет"; });
-        db.collection("system").doc("bdays").onSnapshot(d => { document.getElementById('bdayBox').innerText = d.exists ? d.data().v : "В ближайшее время праздников нет"; });
+        // 1. Вайб-метр
+        db.collection("config").doc("vibe").onSnapshot(d => {
+            if(d.exists) {
+                const v = d.data().v;
+                document.getElementById('vibeVal').innerText = v;
+                document.getElementById('vibeFill').style.width = v + "%";
+            }
+        });
 
-        // Посты
-        db.collection("posts").orderBy("t","desc").onSnapshot(s => {
-            const list = document.getElementById('postList'); list.innerHTML = "";
+        // 2. Тихий час
+        db.collection("config").doc("chat").onSnapshot(d => {
+            chatLocked = d.exists ? d.data().locked : false;
+            document.getElementById('chatStatus').innerText = chatLocked ? "ЧАТ ВЫКЛЮЧЕН АДМИНОМ" : "";
+            document.getElementById('mIn').disabled = chatLocked && me.role !== 'admin';
+        });
+
+        // 3. Шпоры
+        db.collection("shpora").onSnapshot(s => {
+            const l = document.getElementById('shporaList'); l.innerHTML = "<b>📂 Шпоры:</b>";
             s.forEach(doc => {
-                const d = doc.data();
-                const del = (me.role === 'admin') ? `<span style="color:red; font-size:10px" onclick="db.collection('posts').doc('${doc.id}').delete()">Удалить</span>` : "";
-                list.innerHTML += `<div class="card"><b>@${d.u}</b> ${del}<p>${d.m}</p></div>`;
+                l.innerHTML += `<div class="card" onclick="window.open('${doc.data().link}')">📄 ${doc.data().title}</div>`;
             });
         });
 
-        // Чат
-        db.collection("chat").orderBy("t","asc").onSnapshot(s => {
+        // 4. Чат
+        db.collection("chat").orderBy("t","asc").limitToLast(20).onSnapshot(s => {
             const b = document.getElementById('chatBox'); b.innerHTML = "";
             s.forEach(d => {
                 const isMe = d.data().u === me.login;
-                b.innerHTML += `<div style="text-align:${isMe?'right':'left'}; margin-bottom:10px;"><div style="display:inline-block; padding:10px 15px; border-radius:18px; background:${isMe? 'var(--main)':'var(--white)'}; color:${isMe?'white':'black'}; border:1px solid #eee"><b>${d.data().u}</b><br>${d.data().m}</div></div>`;
+                b.innerHTML += `<div style="text-align:${isMe?'right':'left'}"><div style="display:inline-block; padding:8px; border-radius:12px; background:${isMe?'var(--main)':'#eee'}; color:${isMe?'white':'black'}; margin:2px;">${d.data().m}</div></div>`;
             });
             b.scrollTop = b.scrollHeight;
         });
 
-        // ДЗ
-        db.collection("hw").orderBy("t","desc").onSnapshot(s => {
-            const l = document.getElementById('hwList'); l.innerHTML = "";
-            s.forEach(d => { l.innerHTML += `<div class="card" style="border-left:5px solid var(--main)"><b>${d.data().u}:</b><br>${d.data().m}</div>`; });
-        });
+        // Таймер (пример на 25 мая)
+        setInterval(() => {
+            const diff = new Date("2026-05-25") - new Date();
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            document.getElementById('examTimer').innerText = `До конца года: ${days} дней`;
+        }, 1000);
+    }
 
-        // Фото
-        db.collection("users").doc(me.login).onSnapshot(d => { if(d.exists) document.getElementById('myAva').src = d.data().a || "https://cdn-icons-png.flaticon.com/512/149/149071.png"; });
-        
-        setInterval(() => { document.getElementById('timer').innerText = new Date().toLocaleTimeString(); }, 1000);
+    function setVibe(up) {
+        const r = db.collection("config").doc("vibe");
+        db.runTransaction(async (t) => {
+            const d = await t.get(r);
+            let newVal = (d.data().v || 50) + (up ? 1 : -1);
+            t.update(r, {v: Math.max(0, Math.min(100, newVal))});
+        });
+    }
+
+    function rollStudent() {
+        const winner = students[Math.floor(Math.random() * students.length)];
+        document.getElementById('rollRes').innerText = winner + "!";
+        confetti();
+    }
+
+    function playSound(url) {
+        new Audio(url).play();
+    }
+
+    function setTheme(c) {
+        document.body.className = c;
+        localStorage.setItem('theme', c);
+    }
+
+    function saveNotes() {
+        localStorage.setItem('notes_' + me.login, document.getElementById('myNotes').value);
+    }
+
+    function toggleChatStatus() {
+        db.collection("config").doc("chat").set({locked: !chatLocked});
+    }
+
+    function santa() {
+        const friend = students[Math.floor(Math.random() * students.length)];
+        alert("Твой секретный друг на сегодня: " + friend + ". Сделай ему что-то приятное!");
     }
 
     function sendMsg() {
         const i = document.getElementById('mIn');
-        if(i.value.trim()) { 
-            db.collection("chat").add({u:me.login, m:i.value, t:Date.now()}); 
-            confetti({ particleCount: 40, spread: 70, origin: { y: 0.8 } });
+        if(i.value && (!chatLocked || me.role === 'admin')) {
+            db.collection("chat").add({u:me.login, m:i.value, t:Date.now()});
+            i.value = "";
         }
-        i.value = "";
-    }
-
-    function pickUser() {
-        let i = 0;
-        let t = setInterval(() => {
-            document.getElementById('randomRes').innerText = preUsers[Math.floor(Math.random()*preUsers.length)].login;
-            i++; if(i>15) { clearInterval(t); document.getElementById('randomRes').innerHTML = "🔥 " + document.getElementById('randomRes').innerText + " 🔥"; }
-        }, 100);
     }
 
     function go(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('selected'));
         document.getElementById(id).classList.add('active');
-        const map = {'p-school':'n-school', 'p-chat':'n-chat', 'p-prof':'n-prof'};
-        if(map[id]) document.getElementById(map[id]).classList.add('selected');
+        document.getElementById('n-'+id.split('-')[1]).classList.add('selected');
     }
 
-    function ask(type) { editType = type; document.getElementById('modal').style.display = "flex"; }
+    function ask(t) { editType = t; document.getElementById('modal').style.display="flex"; }
 
     document.getElementById('mSave').onclick = () => {
-        const v = document.getElementById('mVal').value.trim();
-        if(!v) return;
-        if(editType === 'status') db.collection("system").doc("status").set({v:v});
-        if(editType === 'bday') db.collection("system").doc("bdays").set({v:v});
-        if(editType === 'post') db.collection("posts").add({u:me.login, m:v, t:Date.now()});
-        if(editType === 'hw') db.collection("hw").add({u:me.login, m:v, t:Date.now()});
-        if(editType === 'ava') db.collection("users").doc(me.login).set({a:v}, {merge:true});
-        document.getElementById('modal').style.display = "none";
-        document.getElementById('mVal').value = "";
+        const v = document.getElementById('mVal').value;
+        if(editType === 'shpora') db.collection("shpora").add({title: v, link: '#', t: Date.now()});
+        if(editType === 'pin') db.collection("config").doc("pin").set({v: v});
+        document.getElementById('modal').style.display="none";
     };
 
-    function clearSystem() { if(confirm("Очистить все посты и чат?")) { db.collection("posts").get().then(s => s.forEach(d => d.ref.delete())); db.collection("chat").get().then(s => s.forEach(d => d.ref.delete())); } }
-    function logout() { localStorage.clear(); location.reload(); }
+    function logout() { location.reload(); }
 </script>
 </body>
 </html>
