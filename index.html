@@ -2,215 +2,129 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Universe App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Школьный Портал 4 «Е»</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root { --main: #007aff; --bg: #f2f2f7; --white: #ffffff; --text: #000000; --gray: #8e8e93; --light-blue: #e1f5fe; --green-chat: #dcf8c6; }
+        :root { --school-bg: #f0f2f8; --accent: #007aff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--school-bg); margin: 0; padding-bottom: 50px; }
+        header { background: white; padding: 20px; text-align: center; border-bottom: 2px solid var(--accent); }
+        .container { max-width: 600px; margin: auto; padding: 15px; }
+        .card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         
-        body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 90px; }
+        /* Таблица расписания */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { color: var(--accent); }
+
+        /* Домашнее задание */
+        .hw-item { background: #f9f9f9; padding: 10px; border-left: 4px solid var(--accent); margin-bottom: 10px; border-radius: 5px; }
+
+        .btn { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .btn-orange { background: #ff9500; }
         
-        /* HEADER */
-        header { background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); padding: 15px 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        /* Музыкальный плеер */
+        .music-player { display: flex; align-items: center; gap: 15px; background: #f1f1f1; padding: 10px; border-radius: 12px; }
         
-        /* CARDS */
-        .page { display: none; padding: 15px; animation: slideIn 0.3s ease-out; }
-        .active { display: block; }
-        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        .card { background: var(--white); padding: 18px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        
-        /* BUTTONS */
-        .btn { background: var(--main); color: white; border: none; padding: 14px 20px; border-radius: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
-        .btn:active { transform: scale(0.96); opacity: 0.8; }
-        .btn-delete { background: #ff3b30; padding: 5px 10px; font-size: 10px; width: auto; margin-top: 5px; }
-
-        /* WHATSAPP CHAT */
-        #chatBox { height: calc(100vh - 280px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px; background: #e5ddd5; border-radius: 20px; }
-        .msg { max-width: 75%; padding: 8px 12px; border-radius: 15px; position: relative; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .msg.me { align-self: flex-end; background: var(--green-chat); border-bottom-right-radius: 2px; }
-        .msg.him { align-self: flex-start; background: var(--white); border-bottom-left-radius: 2px; }
-        .msg-info { font-size: 10px; color: var(--gray); margin-top: 4px; display: flex; justify-content: flex-end; gap: 5px; }
-        .msg-user { font-weight: bold; font-size: 12px; margin-bottom: 3px; display: block; }
-
-        /* NAV */
-        .nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: rgba(255,255,255,0.9); backdrop-filter: blur(15px); display: flex; border-top: 1px solid #ddd; }
-        .nav-item { flex: 1; border: none; background: none; color: var(--gray); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; gap: 4px; }
-        .nav-item i { font-size: 22px; }
-        .nav-item.selected { color: var(--main); }
-
-        /* LOGIN */
-        .login-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; background: white; }
-        input { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid #ddd; margin-bottom: 12px; font-size: 16px; background: var(--bg); }
+        .go-social { display: block; text-align: center; margin-top: 30px; color: #888; text-decoration: none; font-size: 13px; }
     </style>
 </head>
 <body>
 
-<div id="loginView" class="login-screen">
-    <div style="font-size: 60px; margin-bottom: 20px;">🌌</div>
-    <h2 style="margin-bottom: 30px;">Universe Login</h2>
-    <input id="uL" type="text" placeholder="Имя пользователя">
-    <input id="uP" type="password" placeholder="Пароль">
-    <button class="btn" onclick="auth()">Войти в аккаунт</button>
-</div>
+<header>
+    <h1 style="margin:0; color:var(--accent);">🏫 Школа 4 «Е»</h1>
+    <p style="margin:5px 0 0; color:#666;">Личный кабинет ученика</p>
+</header>
 
-<div id="mainView" style="display:none;">
-    <header>
-        <b id="headerTitle">Universe</b>
-        <span id="uNameDisplay" style="font-size: 13px; color: var(--gray);"></span>
-    </header>
+<div class="container">
 
-    <div id="p-school" class="page active">
-        <div class="card" style="background: linear-gradient(135deg, #007aff, #00c6ff); color: white;">
-            <h3>Школьный Портал</h3>
-            <p>10 "Б" класс. Добро пожаловать!</p>
-        </div>
-        
-        <div class="card">
-            <h3><i class="fa-solid fa-bullhorn" style="color:var(--main)"></i> Новости</h3>
-            <div id="newsFeed"></div>
-            <div id="admin-news" style="display:none; margin-top:10px;">
-                <button class="btn" onclick="addNews()"><i class="fa-solid fa-plus"></i> Добавить новость</button>
-            </div>
+    <div class="card">
+        <h3><i class="fa-solid fa-calendar-days"></i> Расписание</h3>
+        <table>
+            <thead><tr><th>№</th><th>Урок</th><th>Время</th></tr></thead>
+            <tbody id="scheduleBody">
+                <tr><td>1</td><td>Русский язык</td><td>08:30</td></tr>
+                <tr><td>2</td><td>Математика</td><td>09:25</td></tr>
+                <tr><td>3</td><td>Английский</td><td>10:30</td></tr>
+                <tr><td>4</td><td>Литературное чтение</td><td>11:25</td></tr>
+                <tr><td>5</td><td>Физкультура</td><td>12:20</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-book-open"></i> Домашнее задание</h3>
+        <div id="hwList">Загрузка заданий...</div>
+        <button id="adminHwBtn" class="btn" style="display:none; margin-top:10px; background:#34c759;" onclick="addHw()">+ Добавить ДЗ</button>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-dice"></i> Кто идет к доске?</h3>
+        <button class="btn btn-orange" onclick="roll()">Крутить рулетку</button>
+        <h2 id="rollRes" style="text-align:center; color:#ff9500; font-size: 32px; margin-top: 15px;">?</h2>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-music"></i> Музыка для уроков</h3>
+        <div class="music-player">
+            <button class="btn" style="width:50px; padding:10px;" onclick="toggleMusic()"><i id="playIcon" class="fa-solid fa-play"></i></button>
+            <div style="font-size:14px;">Лофай для концентрации</div>
+            <audio id="studyAudio" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
         </div>
     </div>
 
-    <div id="p-chat" class="page">
-        <div id="chatBox"></div>
-        <div style="display:flex; gap:10px; padding-top:10px;">
-            <input id="mIn" placeholder="Сообщение..." style="margin-bottom:0;">
-            <button class="btn" style="width:60px; border-radius:50%;" onclick="sendMsg()">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
-
-    <div id="p-prof" class="page">
-        <div class="card" style="text-align:center;">
-            <div style="width:80px; height:80px; background:var(--bg); border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:30px;">👤</div>
-            <h2 id="profName">Ученик</h2>
-            <div style="color:var(--main); font-weight:bold;"><i class="fa-solid fa-coins"></i> <span id="uCoins">0</span> U-Coins</div>
-        </div>
-        <button class="btn" style="background:#8e8e93;" onclick="logout()">Выйти</button>
-    </div>
-
-    <nav class="nav">
-        <button class="nav-item selected" id="n-school" onclick="go('p-school')"><i class="fa-solid fa-house"></i><span>Школа</span></button>
-        <button class="nav-item" id="n-chat" onclick="go('p-chat')"><i class="fa-solid fa-comments"></i><span>Чат</span></button>
-        <button class="nav-item" id="n-prof" onclick="go('p-prof')"><i class="fa-solid fa-user"></i><span>Профиль</span></button>
-    </nav>
+    <a href="social.html" class="go-social">⚠️ Покинуть школу и перейти в Соцсеть</a>
 </div>
 
 <script>
-// ДАННЫЕ УЧЕНИКОВ
-const preUsers = [
-    {login:"Умида", password:"Умида1", role:"student"}, {login:"Азия", password:"азия002", role:"student"},
-    {login:"Шахсанем", password:"шахсанем090", role:"student"}, {login:"Шахмир", password:"шахнепас", role:"student"},
-    {login:"Эмир", password:"эмир777", role:"student"}, {login:"Мирас", password:"мирас111", role:"student"},
-    {login:"Генжеваева_Дилнура", password:"дилнураN1", role:"student"}, {login:"Самая", password:"елдар444", role:"student"},
-    {login:"Шахло", password:"фурхат", role:"student"}, {login:"Дидар", password:"дид2022", role:"student"},
-    {login:"Айсара", password:"улугбек", role:"student"}, {login:"Берик", password:"серик", role:"student"},
-    {login:"Серик", password:"берик", role:"student"}, {login:"Мамутова_Дилнура", password:"дилнураN2", role:"student"},
-    {login:"Ерасыл", password:"аминсайта", role:"admin"}, {login:"Асад", password:"мурат", role:"student"},
-    {login:"Виктория", password:"констат", role:"student"}, {login:"Кошкарова_Дилнура", password:"дилнураN3", role:"student"},
-    {login:"Женис", password:"полат", role:"student"}, {login:"Барно", password:"Улугбек1112", role:"student"},
-    {login:"Рашит", password:"Самат", role:"student"}, {login:"Жасмина", password:"199112346", role:"student"},
-    {login:"Темирбаева_Жасмина", password:"жасминаN2", role:"student"}, {login:"Манас", password:"1995514519", role:"student"},
-    {login:"Асал", password:"1955767412", role:"student"}, {login:"Алина", password:"", role:"student"},
-    {login:"Эла", password:"ЖиЕнНаСбКвАкЯ", role:"student"}, {login:"Тумирис", password:"логика", role:"student"},
-    {login:"Асемай", password:"какой_пароль?", role:"student"}
-];
+// ТВОЙ ПОЛНЫЙ СПИСОК (29 ЧЕЛОВЕК)
+const students = ["Умида", "Азия", "Шахсанем", "Шахмир", "Эмир", "Мирас", "Генжеваева_Дилнура", "Самая", "Шахло", "Дидар", "Айсара", "Берик", "Серик", "Мамутова_Дилнура", "Ерасыл", "Асад", "Виктория", "Кошкарова_Дилнура", "Женис", "Барно", "Рашит", "Жасмина", "Темирбаева_Жасмина", "Манас", "Асал", "Алина", "Эла", "Тумирис", "Асемай"];
 
-// КОНФИГ FIREBASE
-const firebaseConfig = {
-    apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc",
-    authDomain: "e-my-fam.firebaseapp.com",
-    projectId: "e-my-fam",
-    storageBucket: "e-my-fam.firebasestorage.app",
-    messagingSenderId: "538837431491",
-    appId: "1:538837431491:web:9cb1d4706b4d7e97679e76"
+// Настройка Firebase
+const firebaseConfig = { 
+    apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc", 
+    projectId: "e-my-fam" 
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let me = null;
+// Проверка админа (для Ерасыла)
+const myName = localStorage.getItem('u_name');
+if(myName === "Ерасыл") document.getElementById('adminHwBtn').style.display = "block";
 
-function auth() {
-    const l = document.getElementById('uL').value;
-    const p = document.getElementById('uP').value;
-    const user = preUsers.find(u => u.login === l && u.password === p);
-    
-    if(user) {
-        me = user;
-        startApp();
-    } else { alert("Ошибка входа!"); }
+// Функции
+function roll() {
+    const winner = students[Math.floor(Math.random() * students.length)];
+    document.getElementById('rollRes').innerText = winner;
+    confetti({ particleCount: 150, spread: 70, origin: { y: 0.7 } });
 }
 
-function startApp() {
-    document.getElementById('loginView').style.display = 'none';
-    document.getElementById('mainView').style.display = 'block';
-    document.getElementById('uNameDisplay').innerText = me.login;
-    document.getElementById('profName').innerText = me.login;
-    
-    if(me.role === 'admin') document.getElementById('admin-news').style.display = 'block';
+function toggleMusic() {
+    const audio = document.getElementById('studyAudio');
+    const icon = document.getElementById('playIcon');
+    if (audio.paused) { audio.play(); icon.className = "fa-solid fa-pause"; }
+    else { audio.pause(); icon.className = "fa-solid fa-play"; }
+}
 
-    // Слушатель чата
-    db.collection("chat").orderBy("t", "asc").limitToLast(50).onSnapshot(s => {
-        const box = document.getElementById('chatBox');
-        box.innerHTML = "";
-        s.forEach(doc => {
-            const d = doc.data();
-            const isMe = d.u === me.login;
-            const time = new Date(d.t).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            box.innerHTML += `
-                <div class="msg ${isMe ? 'me' : 'him'}">
-                    <span class="msg-user" style="color:${isMe?'#075e54':'#34b7f1'}">${d.u}</span>
-                    ${d.m}
-                    <div class="msg-info">${time} ${me.role === 'admin' ? `<i class="fa-solid fa-trash" style="color:red" onclick="delMsg('${doc.id}')"></i>` : ''}</div>
-                </div>`;
-        });
-        box.scrollTop = box.scrollHeight;
+// Загрузка ДЗ из базы
+db.collection("homework").orderBy("t", "desc").onSnapshot(s => {
+    const list = document.getElementById('hwList');
+    list.innerHTML = "";
+    if (s.empty) list.innerHTML = "Заданий пока нет!";
+    s.forEach(doc => {
+        list.innerHTML += `<div class="hw-item"><b>${doc.data().subject}:</b> ${doc.data().task}</div>`;
     });
+});
 
-    // Новости
-    db.collection("news").orderBy("t", "desc").onSnapshot(s => {
-        const nBox = document.getElementById('newsFeed');
-        nBox.innerHTML = "";
-        s.forEach(doc => {
-            nBox.innerHTML += `<div class="card" style="border-left: 4px solid var(--main)">
-                <b>${doc.data().text}</b>
-                ${me.role === 'admin' ? `<button class="btn btn-delete" onclick="delNews('${doc.id}')">Удалить</button>` : ''}
-            </div>`;
-        });
-    });
+function addHw() {
+    const sub = prompt("Предмет:");
+    const task = prompt("Что задали?");
+    if(sub && task) db.collection("homework").add({ subject: sub, task: task, t: Date.now() });
 }
-
-function sendMsg() {
-    const m = document.getElementById('mIn').value;
-    if(m) {
-        db.collection("chat").add({ u: me.login, m: m, t: Date.now() });
-        document.getElementById('mIn').value = "";
-    }
-}
-
-function go(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('selected'));
-    document.getElementById(id).classList.add('active');
-    document.getElementById('n-' + id.split('-')[1]).classList.add('selected');
-}
-
-// АДМИН ФУНКЦИИ
-function delMsg(id) { if(confirm("Удалить сообщение?")) db.collection("chat").doc(id).delete(); }
-function addNews() {
-    const txt = prompt("Введите текст новости:");
-    if(txt) db.collection("news").add({ text: txt, t: Date.now() });
-}
-function delNews(id) { db.collection("news").doc(id).delete(); }
-function logout() { location.reload(); }
 </script>
 </body>
 </html>
