@@ -3,80 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Школа 4 «Е»: Официальный портал</title>
+    <title>4 «Е» Экосистема</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f2f2f7; margin: 0; padding: 15px; color: #1c1c1e; }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        /* ПЕРЕМЕННЫЕ ТЕМ (Светлая по умолчанию) */
+        :root {
+            --bg: #f2f2f7;
+            --card-bg: #ffffff;
+            --text: #1c1c1e;
+            --border: #ddd;
+            --tab-bg: #ffffff;
+        }
+
+        /* КЛАСС ДЛЯ ТЁМНОЙ ТЕМЫ */
+        body.dark-mode {
+            --bg: #000000;
+            --card-bg: #1c1c1e;
+            --text: #ffffff;
+            --border: #333;
+            --tab-bg: #1c1c1e;
+        }
+
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; transition: 0.3s; }
         .hidden { display: none !important; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 20px; margin: 15px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         
-        /* Профиль */
-        .user-card { display: flex; align-items: center; gap: 15px; }
-        .user-ava { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #eee; border: 2px solid #007aff; }
-        .role-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #007aff; color: white; vertical-align: middle; }
+        /* Кнопка дневника */
+        .diary-link { background: #5856d6; color: white; display: block; text-align: center; padding: 15px; border-radius: 15px; text-decoration: none; font-weight: bold; margin-bottom: 20px; }
+        
+        /* Табы внизу */
+        .tab-bar { position: fixed; bottom: 0; width: 100%; background: var(--tab-bg); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); }
+        .tab-item { text-align: center; color: #8e8e93; text-decoration: none; font-size: 11px; flex: 1; }
+        .tab-item.active { color: #007aff; }
+        .tab-item i { font-size: 22px; display: block; margin-bottom: 3px; }
 
-        /* Личка */
-        #chatBox { height: 150px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 10px; font-size: 13px; border: 1px solid #eee; margin: 10px 0; }
-        .msg { margin-bottom: 5px; padding: 5px; border-radius: 5px; background: white; border-left: 3px solid #007aff; }
+        /* КНОПКА ПЕРЕКЛЮЧЕНИЯ В ПРОФИЛЕ */
+        .theme-btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .theme-btn:active { transform: scale(1.2); } /* Эффект увеличения при нажатии */
 
-        /* Магазин ролей */
-        .shop-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        .price { color: #ff9500; font-weight: bold; }
-
-        input, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        .btn { background: #007aff; color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
-        .btn-adm { background: #34c759; margin-top: 5px; }
+        input, textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; margin: 10px 0; box-sizing: border-box; }
+        .btn { background: #007aff; color: white; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="authBox" class="card" style="text-align: center; margin-top: 50px;">
-    <h2>🏫 Вход в систему</h2>
-    <input id="uL" placeholder="Твое имя">
-    <input id="uP" type="password" placeholder="Пароль">
+<div id="authPage" class="card" style="margin-top: 100px; text-align: center;">
+    <h2>🔒 Вход</h2>
+    <input id="uName" placeholder="Имя">
+    <input id="uPass" type="password" placeholder="Пароль">
     <button class="btn" onclick="login()">Войти</button>
 </div>
 
 <div id="app" class="hidden">
-    <div class="card user-card">
-        <img id="myAva" src="https://i.imgur.com/6VBx3io.png" class="user-ava">
-        <div>
-            <b id="myName">Имя</b> <span id="myRole" class="role-tag">Ученик</span>
-            <div style="font-size: 12px; color: #888; margin-top: 4px;">Баланс: <span id="myBal">0</span> 💰</div>
+    <div id="tab-school" class="page">
+        <div class="card">
+            <a href="https://kundelik.kz" class="diary-link"><i class="fa-solid fa-book"></i> Дневник</a>
+            <h3>📅 Расписание</h3>
+            <div id="schList">Загрузка...</div>
+        </div>
+        <div class="card">
+            <h3>📚 ГДЗ</h3>
+            <div id="gdzList">Пусто.</div>
         </div>
     </div>
 
-    <div class="card">
-        <h3>🏪 Магазин ролей</h3>
-        <div class="shop-item"><span>🌟 VIP статус</span> <span class="price">2000 💰</span></div>
-        <div class="shop-item"><span>🛡️ Модератор</span> <span class="price">5000 💰</span></div>
-        <p style="font-size: 11px; color: #888; text-align: center;">* Для покупки пиши Ерасылу в личку!</p>
+    <div id="tab-chat" class="page hidden">
+        <div class="card">
+            <h3>💬 Чат</h3>
+            <div id="chatBox" style="height:300px; overflow-y:auto; margin-bottom:10px;"></div>
+            <input id="msg" placeholder="Сообщение...">
+            <button class="btn" onclick="send()">Отправить</button>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>✉️ Личные сообщения</h3>
-        <div id="chatBox"></div>
-        <select id="sendTo"><option value="all">Всем (Общий)</option></select>
-        <input id="msgText" placeholder="Напиши что-нибудь...">
-        <button class="btn" onclick="sendMsg()" style="padding: 8px;">Отправить</button>
+    <div id="tab-profile" class="page hidden">
+        <div class="card" style="text-align: center;">
+            <i class="fa-solid fa-circle-user" style="font-size: 60px;"></i>
+            <h2 id="myNick">Имя</h2>
+            
+            <button id="themeToggle" class="theme-btn" onclick="toggleTheme()">
+                Сделать Тёмным
+            </button>
+        </div>
+
+        <div id="x7Panel" class="card hidden" style="border-color: #007aff;">
+            <h3 style="color: #007aff;">💎 Панель X7</h3>
+            <textarea id="admSch" placeholder="Уроки через запятую"></textarea>
+            <button class="btn" onclick="updateSch()">Обновить расписание</button>
+            <hr style="margin:20px 0; border:0; border-top:1px solid var(--border);">
+            <input id="admGSub" placeholder="Предмет">
+            <textarea id="admGRes" placeholder="Ответ"></textarea>
+            <button class="btn" onclick="updateGdz()">Добавить ГДЗ</button>
+        </div>
     </div>
 
-    <div id="admUI" class="card hidden" style="border: 2px solid #34c759;">
-        <h4 style="color:#34c759; margin:0 0 10px 0;">👑 Панель Ерасыла</h4>
-        <input id="admUser" placeholder="Имя ученика">
-        <input id="admVal" placeholder="Значение (Роль или Баллы)">
-        <button class="btn btn-adm" onclick="giveRole()">Выдать роль</button>
-        <button class="btn btn-adm" onclick="giveMoney()">Выдать баллы</button>
-    </div>
-
-    <div class="card">
-        <h3>📅 Расписание</h3>
-        <div id="schShow">Загрузка...</div>
-    </div>
-
-    <a href="social.html" style="display:block; text-align:center; color:#007aff; text-decoration:none; margin-bottom: 20px;">В Соцсеть ➔</a>
+    <nav class="tab-bar">
+        <a href="#" class="tab-item active" onclick="showTab('school', this)"><i class="fa-solid fa-school"></i>Школа</a>
+        <a href="#" class="tab-item" onclick="showTab('chat', this)"><i class="fa-solid fa-message"></i>Чат</a>
+        <a href="#" class="tab-item" onclick="showTab('profile', this)"><i class="fa-solid fa-user-gear"></i>Профиль</a>
+    </nav>
 </div>
 
 <script>
@@ -84,80 +122,76 @@ const firebaseConfig = { apiKey: "AIzaSyDw7KtHos2d88AdeK5eTQSqd5TaAMl2uwc", proj
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const students = ["Умида", "Азия", "Шахсанем", "Шахмир", "Эмир", "Мирас", "Генжеваева_Дилнура", "Самая", "Шахло", "Дидар", "Айсара", "Берик", "Серик", "Мамутова_Дилнура", "Ерасыл", "Асад", "Виктория", "Кошкарова_Дилнура", "Женис", "Барно", "Рашит", "Жасмина", "Темирбаева_Жасмина", "Манас", "Асал", "Алина", "Эла", "Тумирис", "Асемай"];
-
 let me = "";
 
-function login() {
-    const n = document.getElementById('uL').value.trim();
-    const p = document.getElementById('uP').value.trim();
-    if((n === "Ерасыл" && p === "аминсайта") || (students.includes(n) && p !== "")) {
-        me = n;
-        document.getElementById('authBox').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        document.getElementById('myName').innerText = me;
-        if(me === "Ерасыл") document.getElementById('admUI').classList.remove('hidden');
-        
-        // Заполняем список для лички
-        const sel = document.getElementById('sendTo');
-        students.forEach(s => { if(s !== me) sel.innerHTML += `<option value="${s}">${s}</option>`; });
-        
-        initUser();
-        listenMessages();
-    } else { alert("Ошибка!"); }
-}
-
-function initUser() {
-    db.collection("users").doc(me).onSnapshot(doc => {
-        if(doc.exists) {
-            const d = doc.data();
-            document.getElementById('myBal').innerText = d.bal || 0;
-            document.getElementById('myRole').innerText = d.role || "Ученик";
-            if(d.ava) document.getElementById('myAva').src = d.ava;
-        } else {
-            db.collection("users").doc(me).set({ bal: 0, role: "Ученик", ava: "" });
-        }
-    });
-}
-
-// ЛОГИКА ЛИЧКИ
-function sendMsg() {
-    const to = document.getElementById('sendTo').value;
-    const txt = document.getElementById('msgText').value;
-    if(txt) {
-        db.collection("messages").add({ from: me, to: to, msg: txt, time: Date.now() });
-        document.getElementById('msgText').value = "";
+// ФУНКЦИЯ ПЕРЕКЛЮЧЕНИЯ ТЕМЫ
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    
+    body.classList.toggle('dark-mode');
+    
+    if(body.classList.contains('dark-mode')) {
+        btn.innerText = "Сделать Светлым";
+        btn.style.background = "#ffffff";
+        btn.style.color = "#000000";
+    } else {
+        btn.innerText = "Сделать Тёмным";
+        btn.style.background = "#007aff";
+        btn.style.color = "#ffffff";
     }
 }
 
-function listenMessages() {
-    db.collection("messages").orderBy("time", "asc").limitToLast(20).onSnapshot(s => {
-        const box = document.getElementById('chatBox'); box.innerHTML = "";
-        s.forEach(doc => {
-            const d = doc.data();
-            // Показываем если сообщение всем ИЛИ лично мне ИЛИ от меня
-            if(d.to === "all" || d.to === me || d.from === me) {
-                const label = d.to === "all" ? "[ОБЩИЙ]" : `[ЛС для ${d.to}]`;
-                box.innerHTML += `<div class="msg"><b>${d.from} ${label}:</b> ${d.msg}</div>`;
-            }
-        });
-        box.scrollTop = box.scrollHeight;
+function login() {
+    const n = document.getElementById('uName').value.trim();
+    const p = document.getElementById('uPass').value.trim();
+    if((n === "Ерасыл" && p === "X7") || (n !== "" && p !== "")) {
+        me = n;
+        document.getElementById('authPage').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        document.getElementById('myNick').innerText = me;
+        if(me === "Ерасыл") document.getElementById('x7Panel').classList.remove('hidden');
+        startSync();
+    } else { alert("Ошибка!"); }
+}
+
+function showTab(id, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+    document.getElementById('tab-' + id).classList.remove('hidden');
+    document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function startSync() {
+    db.collection("school").doc("schedule").onSnapshot(doc => {
+        if(doc.exists) document.getElementById('schList').innerHTML = doc.data().list.map((u, i) => `<div>${i+1}. ${u}</div>`).join("");
+    });
+    db.collection("gdz").onSnapshot(s => {
+        const out = document.getElementById('gdzList'); out.innerHTML = "";
+        s.forEach(d => { out.innerHTML += `<div style="margin-bottom:10px;"><b>${d.data().sub}:</b><br>${d.data().res}</div>`; });
+    });
+    db.collection("messages").orderBy("time", "asc").onSnapshot(s => {
+        const out = document.getElementById('chatBox'); out.innerHTML = "";
+        s.forEach(d => { out.innerHTML += `<div><b>${d.data().from}:</b> ${d.data().msg}</div>`; });
+        out.scrollTop = out.scrollHeight;
     });
 }
 
-// АДМИНКА ЕРАСЫЛА
-function giveRole() {
-    const u = document.getElementById('admUser').value;
-    const r = document.getElementById('admVal').value;
-    db.collection("users").doc(u).update({ role: r });
-    alert("Роль выдана!");
+function updateSch() {
+    const v = document.getElementById('admSch').value;
+    if(v) db.collection("school").doc("schedule").set({ list: v.split(",") }).then(()=>alert("Успешно"));
 }
-
-function giveMoney() {
-    const u = document.getElementById('admUser').value;
-    const m = parseInt(document.getElementById('admVal').value);
-    db.collection("users").doc(u).update({ bal: firebase.firestore.FieldValue.increment(m) });
-    alert("Баллы начислены!");
+function updateGdz() {
+    const s = document.getElementById('admGSub').value;
+    const r = document.getElementById('admGRes').value;
+    if(s && r) db.collection("gdz").add({ sub: s, res: r, time: Date.now() }).then(()=>alert("Добавлено"));
+}
+function send() {
+    const t = document.getElementById('msg').value;
+    if(t) {
+        db.collection("messages").add({ from: me, msg: t, time: Date.now() });
+        document.getElementById('msg').value = "";
+    }
 }
 </script>
 </body>
